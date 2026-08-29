@@ -95,14 +95,15 @@ nav.site-nav a.active {
 
 /* ---------- Hero ---------- */
 
-main { padding-bottom: 160px; }
+main.wrap { padding-bottom: 160px; }
 
 .hero {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 40px;
   align-items: center;
-  padding: 64px 0 8px;
+  margin-top: 0;
+  padding: 48px 0 8px;
 }
 
 .hero-photo {
