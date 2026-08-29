@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Blog — Kurt Zepeda</title>
+  <meta name="description" content="Notes from Kurt Zepeda.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,16 +13,17 @@
     <div class="wrap">
       <a class="brand" href="/">Kurt Zepeda</a>
       <nav class="site-nav">
+        <a href="/#about">About</a>
         <a href="/#experience">Experience</a>
         <a href="/#skills">Skills</a>
-        <a href="/blog/">Blog</a>
+        <a href="/blog/" class="active">Blog</a>
       </nav>
     </div>
   </header>
 
-  <main class="wrap">
+  <main class="wrap" style="padding-top: 56px;">
     <section>
-      <h2>Blog</h2>
+      <h2 class="section-label">Blog</h2>
       <ul class="post-list">
         <li>
           <a href="/blog/hello-world.html">Hello, world</a>
@@ -32,7 +35,18 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      &copy; <span id="year"></span> Kurt Zepeda
+      <span>&copy; <span id="year"></span> Kurt Zepeda</span>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/kurt-zepeda" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.15 1.45-2.15 2.94v5.66H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56z"/></svg>
+        </a>
+        <a href="https://github.com/kezzywez" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.15-1.11-1.46-1.11-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+        </a>
+        <a href="mailto:kurt.m.zepeda@gmail.com" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        </a>
+      </div>
     </div>
   </footer>
 
