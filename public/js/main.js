@@ -1,6 +1,20 @@
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+const themeToggle = document.getElementById("themeToggle");
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const current =
+      document.documentElement.getAttribute("data-theme") ||
+      (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    const next = current === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch (e) {}
+  });
+}
+
 const revealEls = document.querySelectorAll(".reveal");
 if (revealEls.length && "IntersectionObserver" in window) {
   const revealObserver = new IntersectionObserver(
