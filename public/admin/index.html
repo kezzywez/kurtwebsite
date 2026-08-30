@@ -80,7 +80,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import {
-      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+      getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
     import {
       getFirestore, collection, query, orderBy, onSnapshot, deleteDoc, doc
@@ -88,7 +88,7 @@
 
     const firebaseConfig = {
       apiKey: "AIzaSyBGT0qYIX7iaGN42I0gLz28KoFcQzNSGkY",
-      authDomain: "kurt-zepeda.firebaseapp.com",
+      authDomain: "www.kurtzepeda.com",
       projectId: "kurt-zepeda",
       storageBucket: "kurt-zepeda.firebasestorage.app",
       messagingSenderId: "511031545234",
@@ -163,14 +163,15 @@
     signInBtn.addEventListener("click", () => {
       signInStatus.textContent = "";
       signInStatus.classList.remove("is-error");
-      signInWithPopup(auth, new GoogleAuthProvider()).catch((err) => {
-        if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return;
-        signInStatus.textContent = "Sign-in failed — try again.";
-        signInStatus.classList.add("is-error");
-      });
+      signInWithRedirect(auth, new GoogleAuthProvider());
     });
 
     signOutBtn.addEventListener("click", () => signOut(auth));
+
+    getRedirectResult(auth).catch(() => {
+      signInStatus.textContent = "Sign-in failed — try again.";
+      signInStatus.classList.add("is-error");
+    });
 
     onAuthStateChanged(auth, (user) => {
       if (unsubscribe) {
