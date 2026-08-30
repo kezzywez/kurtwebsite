@@ -86,6 +86,8 @@ header.site-header .wrap {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 
 .brand {
@@ -94,9 +96,13 @@ header.site-header .wrap {
   color: var(--text);
   text-decoration: none;
   letter-spacing: -0.01em;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 nav.site-nav {
+  flex-wrap: wrap;
+  row-gap: 4px;
   display: flex;
   align-items: center;
   gap: 4px;
