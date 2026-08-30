@@ -14,7 +14,7 @@
     "trailingSlash": false,
     "headers": [
       {
-        "source": "**/*.@(css|js)",
+        "source": "**/*.@(css|js|html)",
         "headers": [
           { "key": "Cache-Control", "value": "no-cache" }
         ]
