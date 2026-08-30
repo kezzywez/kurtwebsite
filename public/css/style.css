@@ -180,6 +180,8 @@ main.wrap { padding-bottom: 160px; }
   border: 3px solid var(--bg-elevated);
   box-shadow: var(--shadow);
   justify-self: end;
+  transition: transform 0.15s ease-out;
+  cursor: pointer;
 }
 
 .hero-intro .eyebrow {
@@ -524,4 +526,197 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   .entry { break-inside: avoid; }
 
   a { color: inherit; text-decoration: none; }
+}
+
+/* ---------- Periscope easter egg ---------- */
+
+#cursorTrail {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.periscope-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+  padding: 24px;
+  text-align: center;
+  animation: periscope-fade-in 0.25s ease;
+}
+
+.periscope-overlay[hidden] { display: none; }
+
+@keyframes periscope-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sonar {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sonar-ring {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: sonar-ping 2.4s ease-out infinite;
+}
+
+.sonar-ring:nth-child(2) { animation-delay: 0.8s; }
+.sonar-ring:nth-child(3) { animation-delay: 1.6s; }
+
+@keyframes sonar-ping {
+  0% { width: 16px; height: 16px; opacity: 0.9; }
+  100% { width: 110px; height: 110px; opacity: 0; }
+}
+
+.periscope-icon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  color: var(--accent);
+}
+
+.periscope-fact {
+  max-width: 42ch;
+  color: #f2f2f2;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sonar-ring { animation: none; opacity: 0.5; }
+  .periscope-overlay { animation: none; }
+}
+
+/* ---------- Guestbook ---------- */
+
+.guestbook-intro {
+  color: var(--text-muted);
+  max-width: 60ch;
+  margin: 0 0 32px;
+}
+
+.guestbook-form {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 48px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+
+.guestbook-form label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.guestbook-form input,
+.guestbook-form textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.guestbook-form input:focus,
+.guestbook-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.guestbook-form .hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.guestbook-form button {
+  justify-self: start;
+  font: inherit;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.guestbook-form button:hover { opacity: 0.85; }
+.guestbook-form button:disabled { opacity: 0.5; cursor: default; }
+
+.guestbook-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  min-height: 1.2em;
+}
+
+.guestbook-status.is-error { color: #ff8080; }
+
+.guestbook-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.guestbook-entry {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.guestbook-entry:first-child { padding-top: 0; }
+
+.guestbook-entry .entry-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.guestbook-entry .entry-date {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin-left: 8px;
+}
+
+.guestbook-entry .entry-message {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.guestbook-empty {
+  color: var(--text-muted);
+  font-size: 0.92rem;
 }

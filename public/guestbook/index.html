@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PKNTC2HT5P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PKNTC2HT5P');
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guestbook — Kurt Zepeda</title>
+  <meta name="description" content="Leave a note for Kurt Zepeda.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/">Kurt Zepeda</a>
+      <nav class="site-nav">
+        <a href="/#about">About</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#skills">Skills</a>
+        <a href="/guestbook/" class="active">Guestbook</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-top: 56px;">
+    <section>
+      <h2 class="section-label">Guestbook</h2>
+      <p class="guestbook-intro">Leave a note — I'll see it. Public and visible to anyone who visits this page.</p>
+
+      <form class="guestbook-form" id="guestbookForm">
+        <div>
+          <label for="gbName">Name</label>
+          <input type="text" id="gbName" name="name" maxlength="60" required autocomplete="name">
+        </div>
+        <div>
+          <label for="gbMessage">Message</label>
+          <textarea id="gbMessage" name="message" rows="3" maxlength="500" required></textarea>
+        </div>
+        <div class="hp-field" aria-hidden="true">
+          <label for="gbWebsite">Website</label>
+          <input type="text" id="gbWebsite" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <button type="submit" id="gbSubmit">Sign guestbook</button>
+        <div class="guestbook-status" id="gbStatus"></div>
+      </form>
+
+      <ul class="guestbook-list" id="guestbookList">
+        <li class="guestbook-empty">Loading…</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; <span id="year"></span> Kurt Zepeda</span>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/kurt-zepeda" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.15 1.45-2.15 2.94v5.66H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56z"/></svg>
+        </a>
+        <a href="https://github.com/kezzywez" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.15-1.11-1.46-1.11-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, query, orderBy, limit,
+      onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGT0qYIX7iaGN42I0gLz28KoFcQzNSGkY",
+      authDomain: "kurt-zepeda.firebaseapp.com",
+      projectId: "kurt-zepeda",
+      storageBucket: "kurt-zepeda.firebasestorage.app",
+      messagingSenderId: "511031545234",
+      appId: "1:511031545234:web:e99351e4352bf77d02854b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const guestbookRef = collection(db, "guestbook");
+
+    const listEl = document.getElementById("guestbookList");
+    const formEl = document.getElementById("guestbookForm");
+    const statusEl = document.getElementById("gbStatus");
+    const submitBtn = document.getElementById("gbSubmit");
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts || !ts.toDate) return "";
+      return ts.toDate().toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    const q = query(guestbookRef, orderBy("createdAt", "desc"), limit(50));
+    onSnapshot(
+      q,
+      (snapshot) => {
+        if (snapshot.empty) {
+          listEl.innerHTML = '<li class="guestbook-empty">No entries yet — be the first to sign.</li>';
+          return;
+        }
+        listEl.innerHTML = "";
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const li = document.createElement("li");
+          li.className = "guestbook-entry";
+          li.innerHTML =
+            '<span class="entry-name">' + escapeHtml(data.name || "Anonymous") + '</span>' +
+            '<span class="entry-date">' + formatDate(data.createdAt) + '</span>' +
+            '<p class="entry-message">' + escapeHtml(data.message || "") + '</p>';
+          listEl.appendChild(li);
+        });
+      },
+      () => {
+        listEl.innerHTML = '<li class="guestbook-empty">Couldn\'t load entries right now.</li>';
+      }
+    );
+
+    formEl.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusEl.textContent = "";
+      statusEl.classList.remove("is-error");
+
+      const name = formEl.name.value.trim();
+      const message = formEl.message.value.trim();
+      const honeypot = formEl.website.value.trim();
+
+      if (honeypot) return; // bot caught by honeypot, silently drop
+
+      if (!name || !message) {
+        statusEl.textContent = "Name and message are required.";
+        statusEl.classList.add("is-error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      statusEl.textContent = "Signing…";
+
+      try {
+        await addDoc(guestbookRef, {
+          name: name.slice(0, 60),
+          message: message.slice(0, 500),
+          createdAt: serverTimestamp()
+        });
+        formEl.reset();
+        statusEl.textContent = "Thanks for signing!";
+      } catch (err) {
+        statusEl.textContent = "Something went wrong — try again.";
+        statusEl.classList.add("is-error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
