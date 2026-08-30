@@ -22,6 +22,7 @@
   <meta name="description" content="Leave a note for Kurt Zepeda.">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
   <header class="site-header">
@@ -98,6 +99,8 @@
     const db = getFirestore(app);
     const guestbookRef = collection(db, "guestbook");
 
+    emailjs.init({ publicKey: "w7tPzXk6k4kCA1RvI" });
+
     const formEl = document.getElementById("guestbookForm");
     const statusEl = document.getElementById("gbStatus");
     const submitBtn = document.getElementById("gbSubmit");
@@ -130,6 +133,12 @@
         });
         formEl.reset();
         statusEl.textContent = "Thanks for signing!";
+
+        emailjs.send("service_0uzrtdv", "template_03nx4jn", {
+          name: name.slice(0, 60),
+          message: message.slice(0, 500),
+          time: new Date().toLocaleString()
+        }).catch(() => {}); // best-effort notification; guestbook entry is already saved either way
       } catch (err) {
         statusEl.textContent = "Something went wrong — try again.";
         statusEl.classList.add("is-error");
