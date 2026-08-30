@@ -2,8 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'kurt.m.zepeda@gmail.com';
+    }
+
     match /guestbook/{entryId} {
-      allow read: if false;
+      allow read, delete: if isAdmin();
 
       allow create: if
         request.resource.data.keys().hasOnly(['name', 'message', 'createdAt']) &&
@@ -15,7 +19,7 @@ service cloud.firestore {
         request.resource.data.message.size() <= 500 &&
         request.resource.data.createdAt == request.time;
 
-      allow update, delete: if false;
+      allow update: if false;
     }
   }
 }

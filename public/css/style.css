@@ -720,3 +720,84 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   color: var(--text-muted);
   font-size: 0.92rem;
 }
+
+/* ---------- Admin ---------- */
+
+.admin-signin {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.admin-signin:hover { opacity: 0.85; }
+
+.admin-signin svg { width: 18px; height: 18px; }
+
+.admin-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.admin-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.admin-user img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.admin-signout {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-signout:hover { border-color: var(--accent); color: var(--accent); }
+
+.guestbook-entry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.guestbook-entry .entry-body { flex: 1; min-width: 0; }
+
+.entry-delete {
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.entry-delete:hover { border-color: #ff8080; color: #ff8080; }

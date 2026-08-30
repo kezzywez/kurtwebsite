@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Kurt Zepeda</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/">Kurt Zepeda</a>
+      <nav class="site-nav">
+        <a href="/#about">About</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#skills">Skills</a>
+        <a href="/guestbook/">Guestbook</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-top: 56px;">
+    <section>
+      <h2 class="section-label">Admin</h2>
+
+      <div id="signedOut">
+        <p class="guestbook-intro">Sign in with your Google account to view guestbook entries.</p>
+        <button class="admin-signin" id="signInBtn" type="button">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Sign in with Google
+        </button>
+        <p class="guestbook-status" id="signInStatus"></p>
+      </div>
+
+      <div id="signedIn" hidden>
+        <div class="admin-bar">
+          <div class="admin-user">
+            <img id="userPhoto" src="" alt="">
+            <span id="userEmail"></span>
+          </div>
+          <button class="admin-signout" id="signOutBtn" type="button">Sign out</button>
+        </div>
+
+        <ul class="guestbook-list" id="guestbookList">
+          <li class="guestbook-empty">Loading…</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; <span id="year"></span> Kurt Zepeda</span>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/kurt-zepeda" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.15 1.45-2.15 2.94v5.66H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56z"/></svg>
+        </a>
+        <a href="https://github.com/kezzywez" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.15-1.11-1.46-1.11-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import {
+      getFirestore, collection, query, orderBy, onSnapshot, deleteDoc, doc
+    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGT0qYIX7iaGN42I0gLz28KoFcQzNSGkY",
+      authDomain: "kurt-zepeda.firebaseapp.com",
+      projectId: "kurt-zepeda",
+      storageBucket: "kurt-zepeda.firebasestorage.app",
+      messagingSenderId: "511031545234",
+      appId: "1:511031545234:web:e99351e4352bf77d02854b"
+    };
+
+    const ADMIN_EMAIL = "kurt.m.zepeda@gmail.com";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const guestbookRef = collection(db, "guestbook");
+
+    const signedOutEl = document.getElementById("signedOut");
+    const signedInEl = document.getElementById("signedIn");
+    const signInBtn = document.getElementById("signInBtn");
+    const signInStatus = document.getElementById("signInStatus");
+    const signOutBtn = document.getElementById("signOutBtn");
+    const userPhoto = document.getElementById("userPhoto");
+    const userEmail = document.getElementById("userEmail");
+    const listEl = document.getElementById("guestbookList");
+
+    let unsubscribe = null;
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function formatDate(ts) {
+      if (!ts || !ts.toDate) return "";
+      return ts.toDate().toLocaleString(undefined, {
+        year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+      });
+    }
+
+    function renderEntries() {
+      const q = query(guestbookRef, orderBy("createdAt", "desc"));
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          if (snapshot.empty) {
+            listEl.innerHTML = '<li class="guestbook-empty">No entries yet.</li>';
+            return;
+          }
+          listEl.innerHTML = "";
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const li = document.createElement("li");
+            li.className = "guestbook-entry";
+            li.innerHTML =
+              '<div class="entry-body">' +
+                '<span class="entry-name">' + escapeHtml(data.name || "Anonymous") + '</span>' +
+                '<span class="entry-date">' + formatDate(data.createdAt) + '</span>' +
+                '<p class="entry-message">' + escapeHtml(data.message || "") + '</p>' +
+              '</div>' +
+              '<button class="entry-delete" type="button">Delete</button>';
+            li.querySelector(".entry-delete").addEventListener("click", async () => {
+              if (!confirm("Delete this entry?")) return;
+              await deleteDoc(doc(db, "guestbook", docSnap.id));
+            });
+            listEl.appendChild(li);
+          });
+        },
+        (err) => {
+          listEl.innerHTML = '<li class="guestbook-empty">Couldn\'t load entries: ' + escapeHtml(err.message) + '</li>';
+        }
+      );
+    }
+
+    signInBtn.addEventListener("click", () => {
+      signInStatus.textContent = "";
+      signInStatus.classList.remove("is-error");
+      signInWithPopup(auth, new GoogleAuthProvider()).catch((err) => {
+        if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return;
+        signInStatus.textContent = "Sign-in failed — try again.";
+        signInStatus.classList.add("is-error");
+      });
+    });
+
+    signOutBtn.addEventListener("click", () => signOut(auth));
+
+    onAuthStateChanged(auth, (user) => {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+
+      if (user && user.email === ADMIN_EMAIL) {
+        signedOutEl.hidden = true;
+        signedInEl.hidden = false;
+        userPhoto.src = user.photoURL || "";
+        userEmail.textContent = user.email;
+        renderEntries();
+      } else if (user) {
+        signOut(auth);
+        signInStatus.textContent = "That Google account isn't authorized for this page.";
+        signInStatus.classList.add("is-error");
+        signedOutEl.hidden = false;
+        signedInEl.hidden = true;
+      } else {
+        signedOutEl.hidden = false;
+        signedInEl.hidden = true;
+      }
+    });
+  </script>
+</body>
+</html>
