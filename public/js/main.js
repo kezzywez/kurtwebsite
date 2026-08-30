@@ -99,25 +99,3 @@ if (heroPhoto && periscopeOverlay && periscopeFact) {
     clearTimeout(dismissTimer);
   });
 }
-
-// Hero photo parallax (skipped for touch devices / reduced-motion)
-const prefersFinePointer = window.matchMedia("(pointer: fine)").matches;
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-if (prefersFinePointer && !prefersReducedMotion) {
-  const heroSection = document.querySelector(".hero");
-  if (heroSection && heroPhoto) {
-    heroSection.addEventListener("mousemove", (e) => {
-      const rect = heroPhoto.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = (e.clientX - cx) / rect.width;
-      const dy = (e.clientY - cy) / rect.height;
-      const maxShift = 10;
-      heroPhoto.style.transform = `translate(${dx * maxShift}px, ${dy * maxShift}px)`;
-    });
-    heroSection.addEventListener("mouseleave", () => {
-      heroPhoto.style.transform = "";
-    });
-  }
-}
