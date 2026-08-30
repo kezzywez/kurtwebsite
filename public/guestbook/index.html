@@ -43,7 +43,7 @@
   <main class="wrap" style="padding-top: 56px;">
     <section>
       <h2 class="section-label">Guestbook</h2>
-      <p class="guestbook-intro">Leave a note — I'll see it. Public and visible to anyone who visits this page.</p>
+      <p class="guestbook-intro">Leave a note — only I can read what's signed here.</p>
 
       <form class="guestbook-form" id="guestbookForm">
         <div>
@@ -61,10 +61,6 @@
         <button type="submit" id="gbSubmit">Sign guestbook</button>
         <div class="guestbook-status" id="gbStatus"></div>
       </form>
-
-      <ul class="guestbook-list" id="guestbookList">
-        <li class="guestbook-empty">Loading…</li>
-      </ul>
     </section>
   </main>
 
@@ -86,8 +82,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, query, orderBy, limit,
-      onSnapshot, serverTimestamp
+      getFirestore, collection, addDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -103,46 +98,9 @@
     const db = getFirestore(app);
     const guestbookRef = collection(db, "guestbook");
 
-    const listEl = document.getElementById("guestbookList");
     const formEl = document.getElementById("guestbookForm");
     const statusEl = document.getElementById("gbStatus");
     const submitBtn = document.getElementById("gbSubmit");
-
-    function escapeHtml(str) {
-      const div = document.createElement("div");
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
-    function formatDate(ts) {
-      if (!ts || !ts.toDate) return "";
-      return ts.toDate().toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-    }
-
-    const q = query(guestbookRef, orderBy("createdAt", "desc"), limit(50));
-    onSnapshot(
-      q,
-      (snapshot) => {
-        if (snapshot.empty) {
-          listEl.innerHTML = '<li class="guestbook-empty">No entries yet — be the first to sign.</li>';
-          return;
-        }
-        listEl.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const li = document.createElement("li");
-          li.className = "guestbook-entry";
-          li.innerHTML =
-            '<span class="entry-name">' + escapeHtml(data.name || "Anonymous") + '</span>' +
-            '<span class="entry-date">' + formatDate(data.createdAt) + '</span>' +
-            '<p class="entry-message">' + escapeHtml(data.message || "") + '</p>';
-          listEl.appendChild(li);
-        });
-      },
-      () => {
-        listEl.innerHTML = '<li class="guestbook-empty">Couldn\'t load entries right now.</li>';
-      }
-    );
 
     formEl.addEventListener("submit", async (e) => {
       e.preventDefault();
