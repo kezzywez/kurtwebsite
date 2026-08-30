@@ -100,7 +100,7 @@ if (heroPhoto && periscopeOverlay && periscopeFact) {
   });
 }
 
-// Hero photo parallax + cursor trail (skipped for touch devices / reduced-motion)
+// Hero photo parallax (skipped for touch devices / reduced-motion)
 const prefersFinePointer = window.matchMedia("(pointer: fine)").matches;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -120,53 +120,4 @@ if (prefersFinePointer && !prefersReducedMotion) {
       heroPhoto.style.transform = "";
     });
   }
-
-  const trailCanvas = document.createElement("canvas");
-  trailCanvas.id = "cursorTrail";
-  document.body.appendChild(trailCanvas);
-  const ctx = trailCanvas.getContext("2d");
-
-  const resizeTrail = () => {
-    trailCanvas.width = window.innerWidth;
-    trailCanvas.height = window.innerHeight;
-  };
-  resizeTrail();
-  window.addEventListener("resize", resizeTrail);
-
-  const hexToRgba = (hex, alpha) => {
-    const clean = hex.trim().replace("#", "");
-    const num = parseInt(clean, 16);
-    const r = (num >> 16) & 255;
-    const g = (num >> 8) & 255;
-    const b = num & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
-  const accentColor =
-    getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#5cc8ff";
-
-  let particles = [];
-  let lastAdd = 0;
-
-  window.addEventListener("mousemove", (e) => {
-    const now = performance.now();
-    if (now - lastAdd < 20) return;
-    lastAdd = now;
-    particles.push({ x: e.clientX, y: e.clientY, life: 1 });
-    if (particles.length > 60) particles.shift();
-  });
-
-  const drawTrail = () => {
-    ctx.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
-    particles = particles.filter((p) => p.life > 0);
-    particles.forEach((p) => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 3 * p.life, 0, Math.PI * 2);
-      ctx.fillStyle = hexToRgba(accentColor, p.life * 0.5);
-      ctx.fill();
-      p.life -= 0.045;
-    });
-    requestAnimationFrame(drawTrail);
-  };
-  drawTrail();
 }

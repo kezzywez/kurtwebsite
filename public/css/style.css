@@ -10,6 +10,9 @@
   --max-width: 820px;
   --radius: 12px;
   --shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.45);
+  --grad-a: rgba(92, 200, 255, 0.13);
+  --grad-b: rgba(124, 92, 255, 0.12);
+  --grad-c: rgba(0, 210, 180, 0.07);
 }
 
 @media (prefers-color-scheme: light) {
@@ -23,6 +26,9 @@
     --accent-dim: rgba(0, 114, 177, 0.08);
     --border: #e4e6e9;
     --shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.12);
+    --grad-a: rgba(0, 114, 177, 0.10);
+    --grad-b: rgba(120, 90, 220, 0.09);
+    --grad-c: rgba(0, 170, 160, 0.06);
   }
 }
 
@@ -36,6 +42,9 @@
   --accent-dim: rgba(0, 114, 177, 0.08);
   --border: #e4e6e9;
   --shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.12);
+  --grad-a: rgba(0, 114, 177, 0.10);
+  --grad-b: rgba(120, 90, 220, 0.09);
+  --grad-c: rgba(0, 170, 160, 0.06);
 }
 
 :root[data-theme="dark"] {
@@ -48,6 +57,9 @@
   --accent-dim: rgba(92, 200, 255, 0.14);
   --border: #23272d;
   --shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.45);
+  --grad-a: rgba(92, 200, 255, 0.13);
+  --grad-b: rgba(124, 92, 255, 0.12);
+  --grad-c: rgba(0, 210, 180, 0.07);
 }
 
 * { box-sizing: border-box; }
@@ -61,6 +73,21 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient gradient wash. Fixed pseudo-element rather than
+   background-attachment: fixed, which is unreliable on iOS. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 620px at 12% -8%, var(--grad-a), transparent 62%),
+    radial-gradient(820px 600px at 92% 2%, var(--grad-b), transparent 62%),
+    radial-gradient(760px 560px at 48% 106%, var(--grad-c), transparent 62%),
+    var(--bg);
 }
 
 .wrap {
@@ -493,6 +520,7 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   }
 
   body { background: #fff; }
+  body::before { display: none; }
 
   header.site-header {
     position: static;
@@ -529,13 +557,6 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 }
 
 /* ---------- Periscope easter egg ---------- */
-
-#cursorTrail {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 40;
-}
 
 .periscope-overlay {
   position: fixed;
