@@ -10,9 +10,10 @@
     { "title": "Fargo", "year": 1996 },
     { "title": "Mad Max: Fury Road", "year": 2015 },
     { "title": "The Thing", "year": 1982 },
-    { "title": "Aliens", "year": 1986 },
-    { "title": "Mad Max 2", "year": 1981 },
-    { "title": "Die Hard", "year": 1988 },
-    { "title": "Dredd", "year": 2012 }
+    { "title": "The Hateful Eight", "year": 2015 },
+    { "title": "Alien", "year": 1979 },
+    { "title": "Blood Simple", "year": 1984 },
+    { "title": "A Simple Plan", "year": 1998 },
+    { "title": "Green Room", "year": 2015 }
   ]
 }
