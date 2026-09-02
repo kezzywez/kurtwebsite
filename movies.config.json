@@ -4,12 +4,14 @@
     { "title": "Reservoir Dogs", "year": 1992 },
     { "title": "Interstellar", "year": 2014 },
     { "title": "Fantastic Mr. Fox", "year": 2009 },
-    { "title": "The Grand Budapest Hotel", "year": 2014 },
     { "title": "No Country for Old Men", "year": 2007 },
     { "title": "Heat", "year": 1995 },
-    { "title": "Arrival", "year": 2016 },
-    { "title": "Blade Runner 2049", "year": 2017 },
     { "title": "Children of Men", "year": 2006 },
-    { "title": "Ford v Ferrari", "year": 2019 }
+    { "title": "Goodfellas", "year": 1990 },
+    { "title": "Zodiac", "year": 2007 },
+    { "title": "Collateral", "year": 2004 },
+    { "title": "Fargo", "year": 1996 },
+    { "title": "Sicario", "year": 2015 },
+    { "title": "Mad Max: Fury Road", "year": 2015 }
   ]
 }
