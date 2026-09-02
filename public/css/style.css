@@ -415,32 +415,16 @@ section { margin-top: 72px; scroll-margin-top: 84px; }
   margin: 0 0 20px;
 }
 
-/* Horizontal scroll-snap rail. Negative margins let the row bleed to the screen
-   edge on phones so posters can scroll off-screen rather than stopping short. */
+/* Wrapping grid by default: on a desktop viewport there's room to show every
+   poster at once, and a horizontal rail there would mean dragging a scrollbar
+   with no natural mouse gesture. The rail is reinstated for phones below. */
 .shelf {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  padding: 2px 16px 14px;
-  margin: 0 -16px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-
-.shelf::-webkit-scrollbar { height: 6px; }
-.shelf::-webkit-scrollbar-track { background: transparent; }
-.shelf::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 999px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 22px 14px;
 }
 
 .shelf-item {
-  flex: 0 0 auto;
-  width: 132px;
-  scroll-snap-align: start;
   padding: 0;
   border: none;
   background: none;
@@ -663,7 +647,35 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
   nav.site-nav a { padding: 6px 9px; font-size: 0.85rem; }
 
-  .shelf-item { width: 118px; }
+  /* Phones get the swipe rail instead: a 2-across grid would leave the posters
+     tiny, and horizontal swipe is the natural gesture on touch. Negative margins
+     let the row bleed to the screen edge so posters scroll off rather than
+     stopping short of it. */
+  .shelf {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 16px 14px;
+    margin: 0 -16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .shelf::-webkit-scrollbar { height: 6px; }
+  .shelf::-webkit-scrollbar-track { background: transparent; }
+  .shelf::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+
+  .shelf-item {
+    flex: 0 0 auto;
+    width: 118px;
+    scroll-snap-align: start;
+  }
 }
 
 /* ---------- Print ---------- */
