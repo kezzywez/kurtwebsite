@@ -1,0 +1,13 @@
+{
+  "_comment": "Curated watch list. Edit this file to change what shows on the site. Either give a tmdbId (most reliable), or a title plus year and the build will look it up. Optional 'note' is your own one-liner, shown instead of the TMDB overview.",
+  "movies": [
+    { "title": "Dune: Part Two", "year": 2024 },
+    { "title": "Oppenheimer", "year": 2023 },
+    { "title": "The Hunt for Red October", "year": 1990 },
+    { "title": "Arrival", "year": 2016 },
+    { "title": "Whiplash", "year": 2014 },
+    { "title": "Sicario", "year": 2015 },
+    { "title": "Blade Runner 2049", "year": 2017 },
+    { "title": "Ford v Ferrari", "year": 2019 }
+  ]
+}

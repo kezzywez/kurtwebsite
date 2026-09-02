@@ -43,6 +43,7 @@
         <a href="/#about">About</a>
         <a href="/#experience">Experience</a>
         <a href="/#skills">Skills</a>
+        <a href="/#watching" id="navWatching" hidden>Watching</a>
         <a href="/guestbook/">Guestbook</a>
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme">
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -162,16 +163,47 @@
 
     <section id="skills" class="reveal">
       <h2 class="section-label">Skills</h2>
-      <div class="skills">
-        <span>Program Management</span>
-        <span>Technical Program Management</span>
-        <span>Python</span>
-        <span>JavaScript</span>
-        <span>APIs</span>
-        <span>Product Management</span>
-        <span>Team Leadership</span>
-        <span>Nuclear Power Plants</span>
+
+      <div class="skills-group">
+        <h3 class="skills-category">Program &amp; Product</h3>
+        <div class="skills">
+          <span>Technical Program Management</span>
+          <span>Program Management</span>
+          <span>Product Management</span>
+          <span>Team Leadership</span>
+        </div>
       </div>
+
+      <div class="skills-group">
+        <h3 class="skills-category">Technical</h3>
+        <div class="skills">
+          <span>Python</span>
+          <span>JavaScript</span>
+          <span>APIs</span>
+        </div>
+      </div>
+
+      <div class="skills-group">
+        <h3 class="skills-category">Domain</h3>
+        <div class="skills">
+          <span>Nuclear Power Plants</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="watching" class="reveal" hidden>
+      <h2 class="section-label">Watching</h2>
+      <p class="shelf-intro">A few films I've enjoyed lately. Tap a poster for details.</p>
+
+      <div class="shelf" id="movieShelf" role="list"></div>
+
+      <div class="shelf-detail" id="movieDetail" hidden></div>
+
+      <p class="shelf-credit">
+        Film data and artwork from
+        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>.
+        This product uses the TMDB API but is not endorsed or certified by TMDB.
+      </p>
     </section>
   </main>
 

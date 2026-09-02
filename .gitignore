@@ -3,3 +3,7 @@ node_modules/
 firebase-debug.log
 firebase-debug.*.log
 .DS_Store
+
+# Generated at build time by scripts/fetch-movies.mjs
+public/data/movies.json
+public/assets/posters/
