@@ -28,15 +28,19 @@
 
   // Blur for guess 1, 2, 3, as a fraction of the poster's rendered width. A
   // fixed pixel blur would make the game much harder on a phone, where the
-  // poster is smaller — the same 17px hides proportionally more of it.
-  // Calibrated so a 260px-wide poster blurs by 17 / 9 / 4.
-  const BLUR_RATIO = [0.065, 0.035, 0.015];
+  // poster is smaller — the same pixel radius hides proportionally more of it.
+  // Calibrated so a 260px-wide poster blurs by 19 / 10 / 4. Past roughly 24 on
+  // that width a poster stops being a puzzle and reads as a flat rectangle,
+  // so difficulty comes mostly from the decoys rather than more blur.
+  const BLUR_RATIO = [0.072, 0.038, 0.016];
 
   // Getting it first try is worth double a second guess; answering instantly is
   // worth as much again. 200 a round, 1000 a perfect game.
   const GUESS_BONUS = [100, 50, 25];
   const SPEED_MAX = 100;
-  const BEST_KEY = "posterGameBest";
+  // Versioned: scores set before the difficulty changed aren't comparable, so
+  // bump this whenever the pool, blur or decoy rules move.
+  const BEST_KEY = "posterGameBest.v2";
 
   let pool = [];
   let deck = [];
@@ -183,7 +187,20 @@
     fillEl.classList.remove("is-low");
     countEl.textContent = LIMIT;
 
-    const decoys = shuffle(pool.filter((f) => f.id !== answer.id)).slice(0, CHOICES - 1);
+    // Prefer decoys from the same decade. Random ones are easy to dismiss on
+    // period alone — a 90s poster next to three 2010s titles barely needs
+    // looking at. Falls back to the wider pool when a decade is thin.
+    const decade = (f) => Math.floor(Number(f.year || 0) / 10) * 10;
+    const others = pool.filter((f) => f.id !== answer.id);
+    const sameEra = shuffle(others.filter((f) => decade(f) === decade(answer)));
+
+    const decoys = sameEra.slice(0, CHOICES - 1);
+    if (decoys.length < CHOICES - 1) {
+      const picked = new Set(decoys.map((f) => f.id));
+      const rest = shuffle(others.filter((f) => !picked.has(f.id)));
+      decoys.push(...rest.slice(0, CHOICES - 1 - decoys.length));
+    }
+
     const options = shuffle([answer, ...decoys]);
 
     choicesEl.replaceChildren();

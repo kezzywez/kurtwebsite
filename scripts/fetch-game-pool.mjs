@@ -21,7 +21,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "public", "data", "game-pool.json");
 
 const API = "https://api.themoviedb.org/3";
-const PAGES = 5; // 20 films per page
+// 20 films per page. Deeper than the obvious blockbusters at the very top —
+// still widely seen, but not all guessable from a single blurred glance.
+const PAGES = 12;
 
 const KEY = process.env.TMDB_API_KEY;
 
