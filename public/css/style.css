@@ -930,9 +930,16 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
    land on one screen — a timed round is unfair if you have to scroll to see
    your options. The poster is sized off viewport height for the same reason. */
 @media (max-width: 640px) {
-  .game-page { padding-top: 26px; }
+  /* On a short phone the sticky bar costs ~100px — over a tenth of the screen —
+     for a page where the whole point is seeing poster and answers at once. It
+     scrolls away here and stays sticky everywhere else. */
+  .page-game header.site-header { position: static; }
 
-  .game-intro { font-size: 0.92rem; margin-bottom: 16px; }
+  .game-page { padding-top: 16px; }
+
+  .game-page .section-label { margin-bottom: 14px; }
+
+  .game-intro { font-size: 0.9rem; margin-bottom: 12px; }
 
   .game-body {
     grid-template-columns: 1fr;
@@ -941,7 +948,7 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
   .game-poster {
     width: auto;
-    height: min(34vh, 240px);
+    height: min(24vh, 200px);
     margin: 0 auto;
   }
 
@@ -949,18 +956,32 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
   .game-timer { margin-bottom: 12px; }
 
+  /* Enough for the one-line prompts shown mid-round. The longer end-of-round
+     line may push the buttons down, but by then the round is over. */
   .game-status {
-    min-height: 2.4em;
+    min-height: 1.8em;
     margin-bottom: 10px;
     text-align: center;
     font-size: 0.86rem;
   }
 
-  .game-choices { gap: 8px; }
+  .game-choices { gap: 7px; }
 
   .game-choice {
-    padding: 11px 14px;
-    font-size: 0.88rem;
+    padding: 10px 14px;
+    font-size: 0.86rem;
+    border-radius: 9px;
+  }
+
+  /* One line each, so four long titles can't push the last answer past the
+     fold — measured, two lines still overflowed. Truncated titles stay
+     recognisable ("Pirates of the Caribbean: The Curse of the…") and the full
+     text is on the button's title attribute. */
+  .game-choice-label {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .game-next { margin: 14px auto 0; }
@@ -1162,3 +1183,34 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 }
 
 .entry-delete:hover { border-color: #ff8080; color: #ff8080; }
+
+/* ---------- Very narrow phones ---------- */
+
+/* Below ~400px the nav wraps to three rows and the header grows to ~138px —
+   near a fifth of a short screen. Tightening it keeps the wrap to two rows. */
+@media (max-width: 400px) {
+  .brand { font-size: 0.95rem; }
+
+  nav.site-nav { gap: 2px; }
+
+  nav.site-nav a { padding: 5px 7px; font-size: 0.8rem; }
+
+  .theme-toggle { margin-left: 4px; }
+}
+
+/* Short viewports: the "Poster Game" heading duplicates the page title and the
+   intro right below it, so on a cramped screen its 36px is better spent on the
+   answers. Kept in the accessibility tree rather than removed. */
+@media (max-width: 640px) and (max-height: 800px) {
+  .game-page .section-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .game-poster { height: min(23vh, 190px); }
+}

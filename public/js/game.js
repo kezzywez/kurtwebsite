@@ -180,7 +180,16 @@
       btn.type = "button";
       btn.className = "game-choice";
       btn.dataset.correct = String(film.id === answer.id);
-      btn.textContent = film.year ? `${film.title} (${film.year})` : film.title;
+
+      // Label lives in its own element so it can be line-clamped on narrow
+      // screens; without a cap, four long titles change the layout height
+      // enough to push the last answer off a small phone screen.
+      const text = film.year ? `${film.title} (${film.year})` : film.title;
+      const label = document.createElement("span");
+      label.className = "game-choice-label";
+      label.textContent = text;
+      btn.title = text;
+      btn.appendChild(label);
       btn.addEventListener("click", () => guess(film, btn));
       choicesEl.appendChild(btn);
     });
