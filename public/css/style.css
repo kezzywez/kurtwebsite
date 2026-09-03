@@ -830,6 +830,15 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Poster beside the answers, so a timed round never requires scrolling between
+   the thing you're looking at and the buttons you're choosing from. */
+.game-body {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
 /* overflow:hidden plus the slight scale keeps the blur from feathering into
    transparent edges, which otherwise leaves a pale halo around the poster. */
 .game-poster {
@@ -837,8 +846,7 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--bg-elevated-2);
-  max-width: 260px;
-  margin: 0 auto 18px;
+  width: 100%;
   aspect-ratio: 2 / 3;
 }
 
@@ -854,9 +862,8 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 .game-poster img.is-revealed { transform: scale(1); }
 
 .game-status {
-  min-height: 1.5em;
-  margin: 0 0 16px;
-  text-align: center;
+  min-height: 2.6em;
+  margin: 0 0 14px;
   font-size: 0.92rem;
   color: var(--text-muted);
 }
@@ -864,8 +871,6 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 .game-choices {
   display: grid;
   gap: 10px;
-  max-width: 420px;
-  margin: 0 auto;
 }
 
 .game-choice {
@@ -904,7 +909,7 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
 .game-next {
   display: block;
-  margin: 20px auto 0;
+  margin: 18px 0 0;
   font: inherit;
   font-weight: 600;
   color: var(--bg);
@@ -917,6 +922,26 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 }
 
 .game-next:hover { opacity: 0.85; }
+
+/* Phones don't have room for two columns — stack, and centre as before. */
+@media (max-width: 640px) {
+  .game-body {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .game-poster {
+    max-width: 220px;
+    margin: 0 auto;
+  }
+
+  .game-status {
+    min-height: 2.2em;
+    text-align: center;
+  }
+
+  .game-next { margin: 18px auto 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .game-poster img { transition: none; }

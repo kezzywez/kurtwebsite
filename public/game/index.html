@@ -62,20 +62,24 @@
           </span>
         </div>
 
-        <div class="game-timer" id="gameTimer" role="timer" aria-label="Time remaining this round">
-          <span class="game-timer-track"><span class="game-timer-fill" id="gameTimerFill"></span></span>
-          <span class="game-timer-count" id="gameTimerCount">20</span>
+        <div class="game-body">
+          <div class="game-poster">
+            <img id="gamePoster" alt="Blurred film poster" decoding="async">
+          </div>
+
+          <div class="game-panel">
+            <div class="game-timer" id="gameTimer" role="timer" aria-label="Time remaining this round">
+              <span class="game-timer-track"><span class="game-timer-fill" id="gameTimerFill"></span></span>
+              <span class="game-timer-count" id="gameTimerCount">20</span>
+            </div>
+
+            <p class="game-status" id="gameStatus" role="status" aria-live="polite"></p>
+
+            <div class="game-choices" id="gameChoices"></div>
+
+            <button class="game-next" id="gameNext" type="button" hidden>Next round</button>
+          </div>
         </div>
-
-        <div class="game-poster">
-          <img id="gamePoster" alt="Blurred film poster" decoding="async">
-        </div>
-
-        <p class="game-status" id="gameStatus" role="status" aria-live="polite"></p>
-
-        <div class="game-choices" id="gameChoices"></div>
-
-        <button class="game-next" id="gameNext" type="button" hidden>Next round</button>
       </div>
 
       <p class="game-loading" id="gameLoading">Loading…</p>
