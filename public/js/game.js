@@ -24,10 +24,11 @@
   const CHOICES = 4;
   const LIMIT = 20; // seconds per round
 
-  // Blur in px for guess 1, 2, 3. Much above ~18 the poster reads as a flat
-  // rectangle rather than a hard puzzle. Wrong choices are disabled as you go,
-  // so the answer is always reachable by the third guess.
-  const BLUR = [17, 9, 4];
+  // Blur for guess 1, 2, 3, as a fraction of the poster's rendered width. A
+  // fixed pixel blur would make the game much harder on a phone, where the
+  // poster is smaller — the same 17px hides proportionally more of it.
+  // Calibrated so a 260px-wide poster blurs by 17 / 9 / 4.
+  const BLUR_RATIO = [0.065, 0.035, 0.015];
 
   // Getting it first try is worth double a second guess; answering instantly is
   // worth as much again. 200 a round, 1000 a perfect game.
@@ -45,6 +46,12 @@
   let raf = null;
 
   const relaxed = () => relaxedEl.checked;
+
+  const blurFor = (step) => {
+    const width = posterEl.getBoundingClientRect().width || 260;
+    const ratio = BLUR_RATIO[Math.min(step, BLUR_RATIO.length - 1)];
+    return `blur(${Math.max(2, Math.round(width * ratio))}px)`;
+  };
 
   const shuffle = (arr) => {
     const a = arr.slice();
@@ -143,7 +150,7 @@
     wrong += 1;
     btn.disabled = true;
     btn.classList.add("is-wrong");
-    posterEl.style.filter = `blur(${BLUR[Math.min(wrong, BLUR.length - 1)]}px)`;
+    posterEl.style.filter = blurFor(wrong);
     statusEl.textContent = "Not that one — here's a clearer look.";
   }
 
@@ -154,7 +161,7 @@
     // Alt text must not name the film while it's still the question.
     posterEl.alt = "Blurred film poster";
     posterEl.classList.remove("is-revealed");
-    posterEl.style.filter = `blur(${BLUR[0]}px)`;
+    posterEl.style.filter = blurFor(0);
 
     roundEl.textContent = `Round ${round + 1} of ${ROUNDS}`;
     scoreEl.textContent = score;

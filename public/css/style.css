@@ -744,11 +744,13 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
 /* ---------- Poster game ---------- */
 
+.game-page { padding-top: 56px; }
+
 .game-intro,
 .game-loading {
   color: var(--text-muted);
   max-width: 58ch;
-  margin: 0 0 28px;
+  margin: 0 0 24px;
 }
 
 .game[hidden],
@@ -783,8 +785,9 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 .game-relaxed {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin: -14px 0 26px;
+  gap: 6px;
+  margin-left: 10px;
+  white-space: nowrap;
   color: var(--text-muted);
   font-size: 0.85rem;
   cursor: pointer;
@@ -923,24 +926,44 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
 .game-next:hover { opacity: 0.85; }
 
-/* Phones don't have room for two columns — stack, and centre as before. */
+/* Phones stack, and every gap is tightened so the poster and all four answers
+   land on one screen — a timed round is unfair if you have to scroll to see
+   your options. The poster is sized off viewport height for the same reason. */
 @media (max-width: 640px) {
+  .game-page { padding-top: 26px; }
+
+  .game-intro { font-size: 0.92rem; margin-bottom: 16px; }
+
   .game-body {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
 
   .game-poster {
-    max-width: 220px;
+    width: auto;
+    height: min(34vh, 240px);
     margin: 0 auto;
   }
 
+  .game-meta { margin-bottom: 12px; }
+
+  .game-timer { margin-bottom: 12px; }
+
   .game-status {
-    min-height: 2.2em;
+    min-height: 2.4em;
+    margin-bottom: 10px;
     text-align: center;
+    font-size: 0.86rem;
   }
 
-  .game-next { margin: 18px auto 0; }
+  .game-choices { gap: 8px; }
+
+  .game-choice {
+    padding: 11px 14px;
+    font-size: 0.88rem;
+  }
+
+  .game-next { margin: 14px auto 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

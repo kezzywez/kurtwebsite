@@ -40,18 +40,16 @@
     </div>
   </header>
 
-  <main class="wrap" style="padding-top: 56px;">
+  <main class="wrap game-page">
     <section>
       <h2 class="section-label">Poster Game</h2>
       <p class="game-intro">
-        Guess the film from a blurred poster. It sharpens with every wrong answer,
-        and you have 20 seconds a round — first guess and fast is 200, a perfect
-        game is 1000. Five rounds.
+        Guess the film from a blurred poster — it sharpens with each wrong answer.
+        20 seconds a round, 1000 for a perfect game.
+        <label class="game-relaxed">
+          <input type="checkbox" id="gameRelaxed"> Untimed
+        </label>
       </p>
-
-      <label class="game-relaxed">
-        <input type="checkbox" id="gameRelaxed"> Untimed (no speed bonus, no record)
-      </label>
 
       <div class="game" id="game" hidden>
         <div class="game-meta">
