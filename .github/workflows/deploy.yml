@@ -16,6 +16,10 @@ jobs:
         run: node scripts/fetch-movies.mjs
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+      - name: Fetch poster game pool from TMDB
+        run: node scripts/fetch-game-pool.mjs
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
       - run: npx firebase-tools deploy --only hosting --token "$FIREBASE_TOKEN" --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
