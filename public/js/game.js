@@ -40,7 +40,7 @@
   const SPEED_MAX = 100;
   // Versioned: scores set before the difficulty changed aren't comparable, so
   // bump this whenever the pool, blur or decoy rules move.
-  const BEST_KEY = "posterGameBest.v2";
+  const BEST_KEY = "posterGameBest.v3";
 
   let pool = [];
   let deck = [];
