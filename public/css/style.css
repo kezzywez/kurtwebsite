@@ -846,8 +846,27 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   align-items: start;
 }
 
+/* Results screen: no poster, so collapse the two columns and centre the
+   score and replay button rather than leaving an empty left-hand slot. */
+.game-body.is-done {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.game-body.is-done .game-panel { width: 100%; }
+
+.game-body.is-done .game-status {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.game-body.is-done .game-next { margin: 20px auto 0; }
+
 /* overflow:hidden plus the slight scale keeps the blur from feathering into
    transparent edges, which otherwise leaves a pale halo around the poster. */
+.game-poster[hidden] { display: none; }
+
 .game-poster {
   overflow: hidden;
   border-radius: var(--radius);

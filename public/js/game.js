@@ -8,6 +8,8 @@
 
   const loadingEl = document.getElementById("gameLoading");
   const posterEl = document.getElementById("gamePoster");
+  const posterBox = document.querySelector(".game-poster");
+  const bodyEl = document.querySelector(".game-body");
   const choicesEl = document.getElementById("gameChoices");
   const statusEl = document.getElementById("gameStatus");
   const roundEl = document.getElementById("gameRound");
@@ -161,6 +163,8 @@
     // Alt text must not name the film while it's still the question.
     posterEl.alt = "Blurred film poster";
     posterEl.classList.remove("is-revealed");
+    posterBox.hidden = false;
+    bodyEl.classList.remove("is-done");
 
     // Apply the opening blur with the transition suppressed. Coming out of a
     // revealed round the filter is `none`, so letting it ease into blur would
@@ -215,8 +219,15 @@
     stopTimer();
     timerEl.hidden = true;
     choicesEl.replaceChildren();
+
+    // Hide the whole frame, not just the image. Dropping the src alone leaves
+    // the container's border and background as an empty rectangle on the
+    // results screen.
     posterEl.removeAttribute("src");
     posterEl.alt = "";
+    posterBox.hidden = true;
+    bodyEl.classList.add("is-done");
+
     roundEl.textContent = "Done";
 
     const max = ROUNDS * (GUESS_BONUS[0] + (relaxed() ? 0 : SPEED_MAX));
