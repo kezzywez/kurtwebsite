@@ -44,14 +44,27 @@
     <section>
       <h2 class="section-label">Poster Game</h2>
       <p class="game-intro">
-        Guess the film from a blurred poster. It sharpens with every wrong answer —
-        fewer guesses, more points. Five rounds.
+        Guess the film from a blurred poster. It sharpens with every wrong answer,
+        and you have 20 seconds a round — first guess and fast is 200, a perfect
+        game is 1000. Five rounds.
       </p>
+
+      <label class="game-relaxed">
+        <input type="checkbox" id="gameRelaxed"> Untimed (no speed bonus, no record)
+      </label>
 
       <div class="game" id="game" hidden>
         <div class="game-meta">
           <span id="gameRound">Round 1 of 5</span>
-          <span id="gameScore">0 pts</span>
+          <span class="game-tally">
+            <span class="game-best" id="gameBest" hidden></span>
+            <span class="game-score" id="gameScore">0</span>
+          </span>
+        </div>
+
+        <div class="game-timer" id="gameTimer" role="timer" aria-label="Time remaining this round">
+          <span class="game-timer-track"><span class="game-timer-fill" id="gameTimerFill"></span></span>
+          <span class="game-timer-count" id="gameTimerCount">20</span>
         </div>
 
         <div class="game-poster">
