@@ -161,7 +161,15 @@
     // Alt text must not name the film while it's still the question.
     posterEl.alt = "Blurred film poster";
     posterEl.classList.remove("is-revealed");
+
+    // Apply the opening blur with the transition suppressed. Coming out of a
+    // revealed round the filter is `none`, so letting it ease into blur would
+    // leave the next poster almost legible for the first few hundred ms —
+    // long enough to read the answer. Wrong-guess steps still animate.
+    posterEl.style.transition = "none";
     posterEl.style.filter = blurFor(0);
+    void posterEl.offsetWidth; // commit it before transitions come back
+    posterEl.style.transition = "";
 
     roundEl.textContent = `Round ${round + 1} of ${ROUNDS}`;
     scoreEl.textContent = score;
