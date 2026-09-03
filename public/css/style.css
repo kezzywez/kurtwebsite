@@ -894,12 +894,20 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   color: var(--text-muted);
 }
 
+/* min-width:0 on both: grid and flex items default to min-width:auto, which
+   means they refuse to shrink below their content's intrinsic width. With a
+   nowrap label inside, a long title widens the button past the viewport
+   instead of triggering its ellipsis. */
+.game-panel { min-width: 0; }
+
 .game-choices {
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .game-choice {
+  min-width: 0;
   font: inherit;
   font-size: 0.94rem;
   text-align: left;
