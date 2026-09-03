@@ -6,9 +6,10 @@
 // every deploy, so the game loads artwork from TMDB's CDN at runtime instead.
 // That is why firebase.json allows image.tmdb.org in img-src.
 //
-// Films come from TMDB's top-rated list: the game is unplayable if the answers
-// aren't recognisable, and top-rated is far more stable than "popular", which
-// churns with whatever released this week.
+// Films are the most-voted on TMDB, not the top-rated. Top-rated surfaces
+// obscure titles carrying a handful of perfect scores, plus unreleased ones —
+// no good when every answer has to be recognisable. Vote count is a direct
+// proxy for how many people have actually seen a film.
 //
 // Usage: TMDB_API_KEY=xxx node scripts/fetch-game-pool.mjs
 
@@ -41,10 +42,18 @@ async function tmdb(path, params = {}) {
 
 const seen = new Set();
 const films = [];
+const today = new Date().toISOString().slice(0, 10);
 
 for (let page = 1; page <= PAGES; page += 1) {
   try {
-    const data = await tmdb("/movie/top_rated", { page, language: "en-US" });
+    const data = await tmdb("/discover/movie", {
+      page,
+      language: "en-US",
+      sort_by: "vote_count.desc",
+      include_adult: false,
+      include_video: false,
+      "primary_release_date.lte": today, // no unreleased films
+    });
 
     for (const m of data.results ?? []) {
       // No poster means nothing to guess from.

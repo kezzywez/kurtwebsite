@@ -17,9 +17,10 @@
   const IMG_BASE = "https://image.tmdb.org/t/p/w500";
   const ROUNDS = 5;
   const CHOICES = 4;
-  // Blur in px for guess 1, 2, 3. Wrong choices are disabled as you go, so the
-  // answer is always reachable by the third guess — the score is the challenge.
-  const BLUR = [26, 13, 5];
+  // Blur in px for guess 1, 2, 3. Much above ~18 the poster reads as a flat
+  // rectangle rather than a hard puzzle. Wrong choices are disabled as you go,
+  // so the answer is always reachable by the third guess — score is the challenge.
+  const BLUR = [17, 9, 4];
   const POINTS = [3, 2, 1];
 
   let pool = [];
