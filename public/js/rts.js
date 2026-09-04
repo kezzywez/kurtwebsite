@@ -1,9 +1,8 @@
 // Tiberium Skirmish — a small lane-based RTS.
 //
-// Three lanes between two construction yards. A harvester funds you on a fixed
-// cycle; you spend credits on a single build queue; finished units walk their
-// lane, stop to fight whatever they meet, and chew on the enemy yard if they
-// get through. First yard to fall loses.
+// Three lanes between two construction yards. Harvesters fund two production
+// queues; finished units walk their lane, fight what they meet, and chew on the
+// enemy yard if they get through. First yard to fall loses.
 //
 // Lanes rather than free movement is a deliberate choice for touch: every order
 // is a tap, there is no drag-select or precise pathing to miss on a phone.
@@ -28,16 +27,14 @@
   // ---------- balance ----------
 
   const LANES = 3;
-  // Sized off headless runs: at 1200 an idle player was dead in 31 seconds,
-  // before they'd worked out the build menu. This puts a skirmish at roughly
-  // two to four minutes.
   const YARD_HP = 3200;
   const START_CREDITS = 500;
 
-  // Harvester round trip. Deposit / cycle sets the whole pace of the game:
-  // ~33 credits a second means a rifleman every 3s or a tank every 24s.
-  const HARVEST_AMOUNT = 200;
-  const HARVEST_CYCLE = 6;
+  // Harvester round trip. Long enough that the shuttle reads as a vehicle
+  // driving out and back rather than a blip twitching up and down; the deposit
+  // scales with it so income stays ~33/s.
+  const HARVEST_AMOUNT = 330;
+  const HARVEST_CYCLE = 10;
 
   // A triangle, verified against the headless sim in scratch:
   //   tank shreds rifle · rocket shreds tank · rifle out-economies rocket
@@ -45,24 +42,23 @@
   // were countered by the very tanks they exist to kill, which collapsed the
   // triangle and made massed riflemen strictly the best unit.
   const UNITS = {
-    rifle:  { label: "Rifle",  cost: 100, build: 2.2, hp: 55,  dmg: 5,  rof: 0.6,  speed: 30, range: 34, kind: "inf" },
-    rocket: { label: "Rocket", cost: 250, build: 3.5, hp: 95,  dmg: 14, rof: 0.9,  speed: 23, range: 56, kind: "at",  strongVs: "veh" },
-    tank:   { label: "Tank",   cost: 650, build: 6.5, hp: 480, dmg: 22, rof: 0.85, speed: 18, range: 44, kind: "veh", strongVs: "inf" },
+    rifle:  { label: "Rifle",  cost: 100, build: 2.0, hp: 55,  dmg: 5,  rof: 0.6,  speed: 30, range: 34, kind: "inf", from: "inf" },
+    rocket: { label: "Rocket", cost: 250, build: 3.2, hp: 95,  dmg: 14, rof: 0.9,  speed: 23, range: 56, kind: "at",  from: "inf", strongVs: "veh" },
+    tank:   { label: "Tank",   cost: 650, build: 6.0, hp: 480, dmg: 22, rof: 0.85, speed: 18, range: 44, kind: "veh", from: "veh", strongVs: "inf" },
   };
-  // Buying economy is the one non-combat decision, so it has to actually pay.
-  // As a build-speed buff it never did: credits are the binding constraint,
-  // not queue time, so the button was strictly a trap. Extra harvesters raise
-  // income instead — spend now, out-produce later.
-  const REFINERY = { label: "Refinery", cost: 500, build: 7 };
+  const REFINERY = { label: "Refinery", cost: 500, build: 7, from: "veh" };
   const MAX_REFINERIES = 2;
   const REFINERY_BONUS = 0.6;
   const COUNTER_BONUS = 3;
+
+  // Kills pay out, so trading well funds the next push instead of just
+  // clearing the lane.
+  const BOUNTY = 0.3;
 
   const FOE_COLOR = "#e8624f";
 
   let W = 0, H = 0, laneW = 0;
   let state = null;
-  let raf = null;
   let last = 0;
 
   // ---------- theme ----------
@@ -93,7 +89,7 @@
   function resize() {
     const cssW = canvas.parentElement.clientWidth;
     // 0.40 rather than a fixed height: the bars, HUD and build row all have to
-    // share a phone screen with this, and 0.44 left only 6px spare at 360x740.
+    // share a phone screen with this.
     const cssH = Math.max(240, Math.min(Math.round(window.innerHeight * 0.4), 400));
     const dpr = window.devicePixelRatio || 1;
 
@@ -108,8 +104,8 @@
   }
 
   const laneX = (i) => laneW * (i + 0.5);
-  const TOP = 34;              // enemy yard band
-  const BOT = () => H - 34;    // your yard band
+  const TOP = 34;
+  const BOT = () => H - 34;
 
   // ---------- state ----------
 
@@ -118,69 +114,77 @@
       credits: START_CREDITS,
       refineries: 0,
       lane: 1,
-      queue: [],       // [{ key, left }]
+      // Two lines, like C&C: queuing a tank never blocks infantry, so a tap
+      // always starts something moving.
+      queues: { inf: [], veh: [] },
       units: [],
+      fx: [],
       yard: { you: YARD_HP, foe: YARD_HP },
-      harvester: { t: 0, carrying: false },
-      foe: { credits: 250, build: null, t: 0 },
+      harvester: { t: 0 },
+      foe: { credits: 250, build: { inf: null, veh: null } },
       elapsed: 0,
       over: null,
     };
   }
 
   const refineryCount = () =>
-    state.refineries + state.queue.filter((q) => q.key === "refinery").length;
+    state.refineries + state.queues.veh.filter((q) => q.key === "refinery").length;
 
   const incomeMul = () => 1 + REFINERY_BONUS * state.refineries;
+  const defOf = (key) => (key === "refinery" ? REFINERY : UNITS[key]);
 
   // ---------- building ----------
 
-  const BUTTONS = [
-    { key: "rifle", ...UNITS.rifle },
-    { key: "rocket", ...UNITS.rocket },
-    { key: "tank", ...UNITS.tank },
-    { key: "refinery", ...REFINERY },
-  ];
+  const BUTTONS = ["rifle", "rocket", "tank", "refinery"];
 
   function renderButtons() {
     buildEl.replaceChildren();
-    BUTTONS.forEach((b) => {
+    BUTTONS.forEach((key) => {
+      const d = defOf(key);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "rts-btn";
-      btn.dataset.key = b.key;
+      btn.dataset.key = key;
       btn.innerHTML =
-        `<span class="rts-btn-name">${b.label}</span>` +
-        `<span class="rts-btn-cost">&cent;${b.cost}</span>` +
+        `<span class="rts-btn-name">${d.label}</span>` +
+        `<span class="rts-btn-cost">&cent;${d.cost}</span>` +
         `<span class="rts-btn-prog"></span>`;
-      btn.addEventListener("click", () => queueItem(b.key));
+      btn.addEventListener("click", () => queueItem(key, btn));
       buildEl.appendChild(btn);
     });
   }
 
-  function queueItem(key) {
+  function queueItem(key, btn) {
     if (state.over) return;
-    const def = key === "refinery" ? REFINERY : UNITS[key];
+    const d = defOf(key);
 
     if (key === "refinery" && refineryCount() >= MAX_REFINERIES) {
       say("Refineries at maximum.");
       return;
     }
-    if (state.credits < def.cost) {
+    if (state.credits < d.cost) {
       say("Not enough credits.");
       return;
     }
 
-    state.credits -= def.cost;
-    state.queue.push({ key, left: def.build });
-    say(`${def.label} queued.`);
+    state.credits -= d.cost;
+    state.queues[d.from].push({ key, left: d.build, total: d.build });
+
+    // Acknowledge the tap on the same frame. The unit itself is seconds away,
+    // so without this the button feels dead on press.
+    if (btn) {
+      btn.classList.remove("is-hit");
+      void btn.offsetWidth;
+      btn.classList.add("is-hit");
+    }
+    say(`${d.label} queued.`);
   }
 
   let sayTimer = null;
   function say(msg) {
     statusEl.textContent = msg;
     clearTimeout(sayTimer);
-    sayTimer = setTimeout(() => { statusEl.textContent = ""; }, 2200);
+    sayTimer = setTimeout(() => { statusEl.textContent = ""; }, 2000);
   }
 
   function spawn(side, key, lane) {
@@ -188,9 +192,12 @@
     state.units.push({
       side, key, lane,
       y: side === "you" ? BOT() - 14 : TOP + 14,
-      hp: d.hp, max: d.hp, cd: 0,
+      hp: d.hp, max: d.hp, cd: 0, flash: 0, walk: Math.random() * 6,
     });
   }
+
+  function puff(x, y, color) { state.fx.push({ type: "puff", x, y, t: 0, color }); }
+  function float(x, y, text, color) { state.fx.push({ type: "text", x, y, t: 0, text, color }); }
 
   // ---------- simulation ----------
 
@@ -198,66 +205,66 @@
     if (state.over) return;
     state.elapsed += dt;
 
-    // Harvester: out, load, back, deposit.
     const h = state.harvester;
     h.t += dt;
     if (h.t >= HARVEST_CYCLE) {
       h.t -= HARVEST_CYCLE;
       state.credits += HARVEST_AMOUNT * incomeMul();
+      float(laneX(1), BOT() - 24, "+" + Math.round(HARVEST_AMOUNT * incomeMul()), palette.accent);
     }
 
-    // Build queue — one item at a time, in order.
-    if (state.queue.length) {
-      const job = state.queue[0];
+    for (const line of ["inf", "veh"]) {
+      const q = state.queues[line];
+      if (!q.length) continue;
+      const job = q[0];
       job.left -= dt;
       if (job.left <= 0) {
-        state.queue.shift();
+        q.shift();
         if (job.key === "refinery") {
           state.refineries += 1;
           say("Refinery online. Income up.");
         } else {
           spawn("you", job.key, state.lane);
-          say(`${UNITS[job.key].label} ready.`);
         }
       }
     }
 
     foeThink(dt);
     stepUnits(dt);
+    stepFx(dt);
     checkOver();
   }
 
   function foeThink(dt) {
     const f = state.foe;
-    // Starts below the player's ~33/s so the opening is survivable while you
-    // learn the menu, then overtakes it, so sitting on your lead loses.
+    // Starts below the player's ~33/s so the opening is survivable, then
+    // overtakes it, so sitting on a lead loses.
     f.credits += dt * (22 + Math.min(34, state.elapsed * 0.22));
 
-    if (f.build) {
-      f.build.left -= dt;
-      if (f.build.left <= 0) {
-        spawn("foe", f.build.key, f.build.lane);
-        f.build = null;
+    for (const line of ["inf", "veh"]) {
+      const job = f.build[line];
+      if (job) {
+        job.left -= dt;
+        if (job.left <= 0) { spawn("foe", job.key, job.lane); f.build[line] = null; }
+        continue;
       }
-      return;
+
+      const t = state.elapsed;
+      const table = t < 35 ? [["rifle", 7], ["rocket", 3]]
+                  : t < 80 ? [["rifle", 4], ["rocket", 3], ["tank", 3]]
+                           : [["rifle", 2], ["rocket", 4], ["tank", 4]];
+
+      const pool = table.filter(([k]) => UNITS[k].from === line && UNITS[k].cost <= f.credits);
+      if (!pool.length) continue;
+
+      const total = pool.reduce((s, [, w]) => s + w, 0);
+      let r = Math.random() * total;
+      let pick = pool[0][0];
+      for (const [k, w] of pool) { r -= w; if (r <= 0) { pick = k; break; } }
+
+      f.credits -= UNITS[pick].cost;
+      f.build[line] = { key: pick, left: UNITS[pick].build * 0.9, lane: Math.floor(Math.random() * LANES) };
     }
-
-    // Weights shift toward armour as the game goes on.
-    const t = state.elapsed;
-    const table = t < 35 ? [["rifle", 7], ["rocket", 3]]
-                : t < 80 ? [["rifle", 4], ["rocket", 3], ["tank", 3]]
-                         : [["rifle", 2], ["rocket", 4], ["tank", 4]];
-
-    const pool = table.filter(([k]) => UNITS[k].cost <= f.credits);
-    if (!pool.length) return;
-
-    const total = pool.reduce((s, [, w]) => s + w, 0);
-    let r = Math.random() * total;
-    let pick = pool[0][0];
-    for (const [k, w] of pool) { r -= w; if (r <= 0) { pick = k; break; } }
-
-    f.credits -= UNITS[pick].cost;
-    f.build = { key: pick, left: UNITS[pick].build * 0.9, lane: Math.floor(Math.random() * LANES) };
   }
 
   function stepUnits(dt) {
@@ -265,8 +272,8 @@
       if (u.hp <= 0) continue;
       const d = UNITS[u.key];
       u.cd = Math.max(0, u.cd - dt);
+      u.flash = Math.max(0, u.flash - dt);
 
-      // Nearest live enemy in the same lane, ahead of us.
       let target = null, best = Infinity;
       for (const o of state.units) {
         if (o.hp <= 0 || o.side === u.side || o.lane !== u.lane) continue;
@@ -279,24 +286,42 @@
           const bonus = d.strongVs && UNITS[target.key].kind === d.strongVs ? COUNTER_BONUS : 1;
           target.hp -= d.dmg * bonus;
           u.cd = d.rof;
+          u.flash = 0.1;
+
+          if (target.hp <= 0) {
+            const reward = Math.round(UNITS[target.key].cost * BOUNTY);
+            puff(laneX(target.lane), target.y, u.side === "you" ? palette.accent : FOE_COLOR);
+            if (u.side === "you") {
+              state.credits += reward;
+              float(laneX(target.lane), target.y, "+" + reward, palette.accent);
+            } else {
+              state.foe.credits += reward;
+            }
+          }
         }
         continue;
       }
 
-      // Nothing in reach — advance, and start on the yard once we arrive.
       const dir = u.side === "you" ? -1 : 1;
       const goal = u.side === "you" ? TOP + 12 : BOT() - 12;
       const arrived = u.side === "you" ? u.y <= goal : u.y >= goal;
 
       if (!arrived) {
         u.y += dir * d.speed * dt;
+        u.walk += dt * 9;
       } else if (u.cd === 0) {
         state.yard[u.side === "you" ? "foe" : "you"] -= d.dmg;
         u.cd = d.rof;
+        u.flash = 0.1;
       }
     }
 
     state.units = state.units.filter((u) => u.hp > 0);
+  }
+
+  function stepFx(dt) {
+    for (const f of state.fx) f.t += dt;
+    state.fx = state.fx.filter((f) => f.t < (f.type === "text" ? 1.1 : 0.4));
   }
 
   function checkOver() {
@@ -316,13 +341,11 @@
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    // lanes
     for (let i = 0; i < LANES; i++) {
       ctx.fillStyle = i === state.lane ? withAlpha(palette.accent, 0.07) : palette.panel;
       ctx.fillRect(i * laneW, 0, laneW - 1, H);
     }
 
-    // tiberium seams down the middle of each lane
     ctx.fillStyle = withAlpha(palette.accent, 0.22);
     for (let i = 0; i < LANES; i++) {
       for (let k = 0; k < 5; k++) {
@@ -334,7 +357,6 @@
     drawYard(0, FOE_COLOR, state.yard.foe);
     drawYard(H - TOP, palette.accent, state.yard.you);
 
-    // active-lane marker
     ctx.strokeStyle = withAlpha(palette.accent, 0.55);
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
@@ -348,6 +370,7 @@
 
     drawHarvester();
     for (const u of state.units) drawUnit(u);
+    drawFx();
   }
 
   function drawYard(y, color, hp) {
@@ -357,62 +380,120 @@
     ctx.lineWidth = 2;
     ctx.strokeRect(1, y + 1, W - 2, TOP - 2);
 
-    const pct = Math.max(0, hp / YARD_HP);
     ctx.fillStyle = color;
-    ctx.fillRect(4, y + TOP - 7, (W - 8) * pct, 3);
+    ctx.fillRect(4, y + TOP - 7, (W - 8) * Math.max(0, hp / YARD_HP), 3);
+  }
+
+  // Out, load, back, unload — with a pause at each end so it reads as a
+  // vehicle working rather than a marker sliding.
+  function harvestProgress(p) {
+    if (p < 0.10) return 0;
+    if (p < 0.45) return (p - 0.10) / 0.35;
+    if (p < 0.58) return 1;
+    if (p < 0.93) return 1 - (p - 0.58) / 0.35;
+    return 0;
   }
 
   function drawHarvester() {
-    // Simple shuttle: out on the first half of the cycle, back on the second.
     const p = state.harvester.t / HARVEST_CYCLE;
-    const tri = p < 0.5 ? p * 2 : (1 - p) * 2;
-    const y = H - TOP - 10 - tri * (H - TOP * 2 - 40);
+    const out = harvestProgress(p);
+    const base = H - TOP - 12;
+    const y = base - out * (H - TOP * 2 - 44);
     const x = laneX(1);
+    const loaded = p >= 0.45 && p < 0.93;
 
+    ctx.fillStyle = withAlpha(palette.accent, 0.35);
+    ctx.fillRect(x - 8, y - 7, 16, 14);
     ctx.fillStyle = palette.accent;
-    ctx.beginPath();
-    ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y); ctx.lineTo(x, y + 6); ctx.lineTo(x - 6, y);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillRect(x - 8, y - 7, 16, 3);
+    ctx.fillRect(x - 8, y + 4, 16, 3);
+    if (loaded) {
+      ctx.fillStyle = palette.accent;
+      ctx.fillRect(x - 4, y - 3, 8, 6);
+    }
   }
 
+  // Distinct silhouettes and sizes: at this scale a shared triangle made every
+  // unit look the same, so rifle / rocket / tank differ in outline as well as
+  // footprint.
   function drawUnit(u) {
     const d = UNITS[u.key];
-    const x = laneX(u.lane) + (u.side === "you" ? -8 : 8);
+    const x = laneX(u.lane) + (u.side === "you" ? -9 : 9);
     const color = u.side === "you" ? palette.accent : FOE_COLOR;
+    const fwd = u.side === "you" ? -1 : 1;
+    const bob = Math.sin(u.walk) * 0.8;
+    const y = u.y + bob;
+
     ctx.fillStyle = color;
 
-    if (d.kind === "veh") {
-      ctx.fillRect(x - 7, u.y - 6, 14, 12);
-      ctx.fillRect(x - 1.5, u.y + (u.side === "you" ? -13 : 5), 3, 8);
-    } else {
-      const point = u.side === "you" ? -7 : 7;
+    if (u.key === "tank") {
+      ctx.fillStyle = withAlpha(color, 0.45);
+      ctx.fillRect(x - 9, y - 8, 3, 16);
+      ctx.fillRect(x + 6, y - 8, 3, 16);
+      ctx.fillStyle = color;
+      ctx.fillRect(x - 6, y - 7, 12, 14);
+      ctx.fillRect(x - 1.5, y + fwd * 8, 3, 7 * -fwd);
+      ctx.fillStyle = withAlpha(palette.panel, 0.55);
+      ctx.fillRect(x - 3, y - 2, 6, 5);
+    } else if (u.key === "rocket") {
       ctx.beginPath();
-      ctx.moveTo(x, u.y + point);
-      ctx.lineTo(x + 5, u.y - point * 0.5);
-      ctx.lineTo(x - 5, u.y - point * 0.5);
-      ctx.closePath();
+      ctx.arc(x, y + fwd * 4, 3, 0, Math.PI * 2);
       ctx.fill();
-      if (u.key === "rocket") {
-        ctx.fillRect(x - 1, u.y - 1, 2, 2 * (u.side === "you" ? -1 : 1) + 4);
-      }
+      ctx.fillRect(x - 3.5, y - 2, 7, 7);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(fwd * -0.5);
+      ctx.fillRect(-1.5, -9, 3, 11);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      ctx.arc(x, y + fwd * 4, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(x - 3, y - 2, 6, 6);
+      ctx.fillRect(x + (u.side === "you" ? 2 : -4), y + fwd * 2, 2, 6 * -fwd);
+    }
+
+    if (u.flash > 0) {
+      ctx.fillStyle = "#ffd88a";
+      ctx.beginPath();
+      ctx.arc(x, y + fwd * (d.kind === "veh" ? 15 : 10), 3.2, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     if (u.hp < u.max) {
-      ctx.fillStyle = withAlpha(palette.muted, 0.5);
-      ctx.fillRect(x - 8, u.y + 9, 16, 2);
+      const w = d.kind === "veh" ? 18 : 14;
+      ctx.fillStyle = withAlpha(palette.muted, 0.45);
+      ctx.fillRect(x - w / 2, y + 11, w, 2);
       ctx.fillStyle = color;
-      ctx.fillRect(x - 8, u.y + 9, 16 * (u.hp / u.max), 2);
+      ctx.fillRect(x - w / 2, y + 11, w * (u.hp / u.max), 2);
     }
   }
 
+  function drawFx() {
+    for (const f of state.fx) {
+      if (f.type === "puff") {
+        const k = f.t / 0.4;
+        ctx.strokeStyle = withAlpha(f.color, 1 - k);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, 4 + k * 12, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        const k = f.t / 1.1;
+        ctx.fillStyle = withAlpha(f.color, 1 - k);
+        ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(f.text, f.x, f.y - k * 22);
+      }
+    }
+    ctx.textAlign = "start";
+  }
+
   function withAlpha(color, a) {
-    // Palette values are hex from the stylesheet; fall back to the raw value
-    // for anything else so a theme tweak can't blank the canvas.
     const m = /^#([0-9a-f]{6})$/i.exec(color);
     if (!m) return color;
     const n = parseInt(m[1], 16);
-    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${Math.max(0, a)})`;
   }
 
   // ---------- hud ----------
@@ -423,24 +504,20 @@
     foeFill.style.width = Math.max(0, (state.yard.foe / YARD_HP) * 100) + "%";
     youFill.style.width = Math.max(0, (state.yard.you / YARD_HP) * 100) + "%";
 
-    const job = state.queue[0];
     [...buildEl.children].forEach((btn) => {
       const key = btn.dataset.key;
-      const def = key === "refinery" ? REFINERY : UNITS[key];
+      const d = defOf(key);
+      const q = state.queues[d.from];
       const capped = key === "refinery" && refineryCount() >= MAX_REFINERIES;
 
-      btn.disabled = Boolean(state.over) || capped || state.credits < def.cost;
-      btn.classList.toggle("is-capped", capped);
+      btn.disabled = Boolean(state.over) || capped || state.credits < d.cost;
 
-      const prog = btn.querySelector(".rts-btn-prog");
-      if (job && job.key === key) {
-        prog.style.width = (1 - job.left / def.build) * 100 + "%";
-      } else {
-        prog.style.width = "0%";
-      }
+      const head = q[0];
+      btn.querySelector(".rts-btn-prog").style.width =
+        head && head.key === key ? (1 - head.left / head.total) * 100 + "%" : "0%";
 
-      const queued = state.queue.filter((q) => q.key === key).length;
-      btn.dataset.queued = queued > 1 ? String(queued) : "";
+      const n = q.filter((j) => j.key === key).length;
+      btn.dataset.queued = n > 1 ? String(n) : "";
     });
   }
 
@@ -455,7 +532,7 @@
     update(dt);
     draw();
     drawHud();
-    raf = requestAnimationFrame(frame);
+    requestAnimationFrame(frame);
   }
 
   // ---------- input ----------
@@ -471,7 +548,6 @@
 
   window.addEventListener("resize", () => {
     resize();
-    // Yard bands move with the canvas height; nudge anyone now out of bounds.
     if (state) for (const u of state.units) u.y = Math.max(TOP + 12, Math.min(BOT() - 12, u.y));
   });
 
@@ -486,5 +562,5 @@
   renderButtons();
   reset();
   last = performance.now();
-  raf = requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
 })();

@@ -1545,3 +1545,24 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 @media (prefers-reduced-motion: reduce) {
   .game-card:hover { transform: none; }
 }
+
+/* Tap acknowledgement. A queued unit is seconds from appearing, so the button
+   has to confirm the press on the same frame or it feels unresponsive. */
+.rts-btn:active:not(:disabled) {
+  transform: scale(0.96);
+  border-color: var(--accent);
+}
+
+.rts-btn.is-hit {
+  animation: rts-hit 0.32s ease-out;
+}
+
+@keyframes rts-hit {
+  0%   { background: var(--accent); border-color: var(--accent); }
+  100% { background: var(--bg-elevated); border-color: var(--border); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rts-btn:active:not(:disabled) { transform: none; }
+  .rts-btn.is-hit { animation: none; }
+}
