@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PKNTC2HT5P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PKNTC2HT5P');
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tiberium Skirmish — Kurt Zepeda</title>
+  <meta name="description" content="A small lane-based real-time strategy game. Harvest, build, and take out the enemy construction yard.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="page-rts">
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/">Kurt Zepeda</a>
+      <nav class="site-nav">
+        <a href="/#about">About</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#skills">Skills</a>
+        <a href="/guestbook/">Guestbook</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap rts-page">
+    <section>
+      <h2 class="section-label">Tiberium Skirmish</h2>
+      <p class="rts-intro">
+        Your harvester funds the war. Queue units, pick a lane, and level their
+        construction yard before they level yours.
+      </p>
+
+      <div class="rts" id="rts">
+        <div class="rts-bars">
+          <div class="rts-bar rts-bar-foe">
+            <span class="rts-bar-label">Enemy yard</span>
+            <span class="rts-bar-track"><span class="rts-bar-fill" id="foeYardFill"></span></span>
+          </div>
+          <div class="rts-bar rts-bar-you">
+            <span class="rts-bar-label">Your yard</span>
+            <span class="rts-bar-track"><span class="rts-bar-fill" id="youYardFill"></span></span>
+          </div>
+        </div>
+
+        <div class="rts-stats">
+          <span class="rts-credits" id="rtsCredits">&cent; 500</span>
+          <span class="rts-power" id="rtsPower">Income &cent;33/s</span>
+        </div>
+
+        <div class="rts-field-wrap">
+          <canvas id="rtsCanvas" role="img"
+                  aria-label="Battlefield: three lanes between your construction yard and the enemy's"></canvas>
+          <div class="rts-over" id="rtsOver" hidden>
+            <p class="rts-over-text" id="rtsOverText"></p>
+            <button class="rts-restart" id="rtsRestart" type="button">Play again</button>
+          </div>
+        </div>
+
+        <p class="rts-hint" id="rtsHint">Tap a lane to send new units there.</p>
+
+        <div class="rts-build" id="rtsBuild"></div>
+
+        <p class="rts-status" id="rtsStatus" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; <span id="year"></span> Kurt Zepeda</span>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/kurt-zepeda" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.15 1.45-2.15 2.94v5.66H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56z"/></svg>
+        </a>
+        <a href="https://github.com/kezzywez" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.15-1.11-1.46-1.11-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/rts.js"></script>
+</body>
+</html>
