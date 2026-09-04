@@ -786,14 +786,16 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   font-size: 0.95rem;
 }
 
+/* Sits below the answers: it's a set-once preference, and above the fold it
+   was competing for room the poster and choices need. */
 .game-relaxed {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-left: 10px;
+  margin-top: 16px;
   white-space: nowrap;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
@@ -979,13 +981,13 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
   .game-poster {
     width: auto;
-    height: min(24vh, 200px);
+    height: min(21vh, 175px);
     margin: 0 auto;
   }
 
-  .game-meta { margin-bottom: 12px; }
+  .game-meta { margin-bottom: 10px; }
 
-  .game-timer { margin-bottom: 12px; }
+  .game-timer { margin-bottom: 10px; }
 
   /* Enough for the one-line prompts shown mid-round. The longer end-of-round
      line may push the buttons down, but by then the round is over. */
@@ -996,12 +998,14 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
     font-size: 0.86rem;
   }
 
-  .game-choices { gap: 7px; }
+  /* Six buttons instead of four costs ~100px, paid for here and by the
+     smaller poster below. */
+  .game-choices { gap: 6px; }
 
   .game-choice {
-    padding: 10px 14px;
-    font-size: 0.86rem;
-    border-radius: 9px;
+    padding: 8px 13px;
+    font-size: 0.85rem;
+    border-radius: 8px;
   }
 
   /* One line each, so four long titles can't push the last answer past the
@@ -1232,7 +1236,10 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 /* Short viewports: the "Poster Game" heading duplicates the page title and the
    intro right below it, so on a cramped screen its 36px is better spent on the
    answers. Kept in the accessibility tree rather than removed. */
-@media (max-width: 640px) and (max-height: 800px) {
+/* 950px covers essentially every phone in portrait (844 / 852 / 896 / 926 /
+   932 are the common ones) — at 800 the taller iPhones missed out and ended up
+   with less room than a small Android. */
+@media (max-width: 640px) and (max-height: 950px) {
   .game-page .section-label {
     position: absolute;
     width: 1px;
@@ -1243,5 +1250,22 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
     white-space: nowrap;
   }
 
-  .game-poster { height: min(23vh, 190px); }
+  /* Six answers need the room more than the rules do — the game explains
+     itself once you're in it, and the intro is still read on first load at
+     taller viewports. Kept in the accessibility tree. */
+  .game-intro {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* The vh term is what a 740px-tall screen can spare; the generous cap lets
+     taller phones show a noticeably bigger poster with the same rule. */
+  .game-poster { height: min(21vh, 230px); }
+
+  .game-status { min-height: 1.6em; margin-bottom: 8px; }
 }

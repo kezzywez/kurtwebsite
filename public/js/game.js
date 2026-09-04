@@ -23,7 +23,10 @@
 
   const IMG_BASE = "https://image.tmdb.org/t/p/w500";
   const ROUNDS = 5;
-  const CHOICES = 4;
+  const CHOICES = 6;
+  // With six options and three guesses you can no longer reach the answer by
+  // elimination, so a round is genuinely losable.
+  const MAX_GUESSES = 3;
   const LIMIT = 20; // seconds per round
 
   // Blur for guess 1, 2, 3, as a fraction of the poster's rendered width. A
@@ -131,10 +134,14 @@
     nextEl.focus();
   }
 
-  function timeUp() {
+  function revealCorrect() {
     choicesEl.querySelectorAll(".game-choice").forEach((b) => {
       if (b.dataset.correct === "true") b.classList.add("is-correct");
     });
+  }
+
+  function timeUp() {
+    revealCorrect();
     endRound(`Time. It was ${answer.title} (${answer.year}) — no points.`);
   }
 
@@ -156,6 +163,13 @@
     wrong += 1;
     btn.disabled = true;
     btn.classList.add("is-wrong");
+
+    if (wrong >= MAX_GUESSES) {
+      revealCorrect();
+      endRound(`Out of guesses — it was ${answer.title} (${answer.year}).`);
+      return;
+    }
+
     posterEl.style.filter = blurFor(wrong);
     statusEl.textContent = "Not that one — here's a clearer look.";
   }
