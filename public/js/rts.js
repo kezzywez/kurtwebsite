@@ -35,6 +35,12 @@
   // scales with it so income stays ~33/s.
   const HARVEST_AMOUNT = 330;
   const HARVEST_CYCLE = 10;
+  // Cycle phase boundaries, as a fraction of HARVEST_CYCLE. Field dwell is
+  // when it's parked loading; base arrival is when it's paid out.
+  const FIELD_ENTER = 0.45;
+  const FIELD_LEAVE = 0.58;
+  const BASE_ARRIVE = 0.93;
+  const REGROW_TIME = 6; // seconds for the tiberium patch to fill back in
 
   // A triangle, verified against the headless sim in scratch:
   //   tank shreds rifle · rocket shreds tank · rifle out-economies rocket
@@ -120,7 +126,7 @@
       units: [],
       fx: [],
       yard: { you: YARD_HP, foe: YARD_HP },
-      harvester: { t: 0 },
+      harvester: { t: 0, lastHarvestT: -999 },
       foe: { credits: 250, build: { inf: null, veh: null } },
       elapsed: 0,
       over: null,
@@ -206,12 +212,25 @@
     state.elapsed += dt;
 
     const h = state.harvester;
+    const prevHarvestP = h.t / HARVEST_CYCLE;
     h.t += dt;
-    if (h.t >= HARVEST_CYCLE) {
-      h.t -= HARVEST_CYCLE;
-      state.credits += HARVEST_AMOUNT * incomeMul();
-      float(laneX(1), BOT() - 24, "+" + Math.round(HARVEST_AMOUNT * incomeMul()), palette.accent);
+    const harvestP = h.t / HARVEST_CYCLE;
+
+    // The field taps out the instant loading starts, not on arrival — it
+    // should already look picked-over while the harvester is still parked.
+    if (prevHarvestP < FIELD_ENTER && harvestP >= FIELD_ENTER) {
+      h.lastHarvestT = state.elapsed;
     }
+    // Paid the moment it's back, not after an extra idle beat at the yard.
+    // With any gap, arriving and getting paid read as two unrelated events
+    // instead of one causing the other.
+    if (prevHarvestP < BASE_ARRIVE && harvestP >= BASE_ARRIVE) {
+      const amount = Math.round(HARVEST_AMOUNT * incomeMul());
+      state.credits += amount;
+      float(laneX(1), BOT() - 22, "+" + amount, palette.accent);
+      puff(laneX(1), BOT() - 22, palette.accent);
+    }
+    if (h.t >= HARVEST_CYCLE) h.t -= HARVEST_CYCLE;
 
     for (const line of ["inf", "veh"]) {
       const q = state.queues[line];
@@ -368,6 +387,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
+    drawTiberiumField();
     drawHarvester();
     for (const u of state.units) drawUnit(u);
     drawFx();
@@ -384,32 +404,64 @@
     ctx.fillRect(4, y + TOP - 7, (W - 8) * Math.max(0, hp / YARD_HP), 3);
   }
 
-  // Out, load, back, unload — with a pause at each end so it reads as a
-  // vehicle working rather than a marker sliding.
-  function harvestProgress(p) {
+  // Out, load, back, unload — position and cargo driven by the same p so the
+  // two always agree: the hopper is only full while genuinely parked at the
+  // field, and empty again the instant it's paid out.
+  function harvestPosition(p) {
     if (p < 0.10) return 0;
-    if (p < 0.45) return (p - 0.10) / 0.35;
-    if (p < 0.58) return 1;
-    if (p < 0.93) return 1 - (p - 0.58) / 0.35;
+    if (p < FIELD_ENTER) return (p - 0.10) / (FIELD_ENTER - 0.10);
+    if (p < FIELD_LEAVE) return 1;
+    if (p < BASE_ARRIVE) return 1 - (p - FIELD_LEAVE) / (BASE_ARRIVE - FIELD_LEAVE);
     return 0;
+  }
+
+  function harvestCargo(p) {
+    if (p < FIELD_ENTER) return 0;
+    if (p < FIELD_LEAVE) return (p - FIELD_ENTER) / (FIELD_LEAVE - FIELD_ENTER); // filling
+    if (p < BASE_ARRIVE) return 1; // full for the drive back
+    return 0; // dumped the instant it's paid
+  }
+
+  // A visible resource, not just an invisible timer. Shrinks to a third size
+  // the moment loading starts and regrows over the following seconds, so
+  // there's something on the field that visibly explains the credits.
+  function drawTiberiumField() {
+    const since = state.elapsed - state.harvester.lastHarvestT;
+    const regrow = Math.min(1, Math.max(0, since / REGROW_TIME));
+    const scale = 0.4 + 0.6 * regrow;
+    const x = laneX(1), y = TOP + 30;
+
+    ctx.fillStyle = withAlpha(palette.accent, 0.3 + 0.55 * regrow);
+    for (const [dx, dy] of [[0, -1], [0.8, 0.45], [-0.8, 0.45]]) {
+      const sx = x + dx * 10 * scale, sy = y + dy * 8 * scale;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - 6 * scale);
+      ctx.lineTo(sx + 3 * scale, sy);
+      ctx.lineTo(sx, sy + 6 * scale);
+      ctx.lineTo(sx - 3 * scale, sy);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 
   function drawHarvester() {
     const p = state.harvester.t / HARVEST_CYCLE;
-    const out = harvestProgress(p);
+    const out = harvestPosition(p);
+    const cargo = harvestCargo(p);
     const base = H - TOP - 12;
     const y = base - out * (H - TOP * 2 - 44);
     const x = laneX(1);
-    const loaded = p >= 0.45 && p < 0.93;
 
     ctx.fillStyle = withAlpha(palette.accent, 0.35);
     ctx.fillRect(x - 8, y - 7, 16, 14);
     ctx.fillStyle = palette.accent;
     ctx.fillRect(x - 8, y - 7, 16, 3);
     ctx.fillRect(x - 8, y + 4, 16, 3);
-    if (loaded) {
-      ctx.fillStyle = palette.accent;
-      ctx.fillRect(x - 4, y - 3, 8, 6);
+
+    if (cargo > 0) {
+      // Fills bottom-up, like a hopper loading rather than a light switching on.
+      const h = 6 * cargo;
+      ctx.fillRect(x - 4, y + 3 - h, 8, h);
     }
   }
 
