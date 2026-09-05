@@ -23,6 +23,8 @@
   const restartEl = document.getElementById("rtsRestart");
   const foeFill = document.getElementById("foeYardFill");
   const youFill = document.getElementById("youYardFill");
+  const strikeEl = document.getElementById("rtsStrike");
+  const strikeFillEl = document.getElementById("rtsStrikeFill");
 
   // ---------- balance ----------
 
@@ -42,6 +44,16 @@
   const BASE_ARRIVE = 0.93;
   const REGROW_TIME = 6; // seconds for the tiberium patch to fill back in
 
+  // The harvester is now a target, not scenery: a lane left undefended can
+  // cost you your economy, the way raiding a harvester does in real C&C.
+  const HARVESTER_MAX_HP = 140;
+  const HARVESTER_REBUILD_TIME = 9;
+
+  // The mirror of that threat: push a unit deep into their territory
+  // uncontested and their production slows, the way disrupting a harvester's
+  // route would. Lighter than a second animated harvester, same tension.
+  const FRONT_INCOME_MULT = 0.5;
+
   // A triangle, verified against the headless sim in scratch:
   //   tank shreds rifle · rocket shreds tank · rifle out-economies rocket
   // Rockets are their own class ("at") rather than infantry — as infantry they
@@ -57,15 +69,28 @@
   const REFINERY_BONUS = 0.6;
   const COUNTER_BONUS = 3;
 
+  // Tank is gated behind a one-time structure, same as real C&C's War Factory —
+  // the match now has an opening (infantry only), a tech decision, and an
+  // armoured lategame, instead of every option being open from second one.
+  // The enemy pays the same tax so it stays fair.
+  const WAR_FACTORY = { label: "War Factory", cost: 600, build: 8, from: "veh" };
+
   // Kills pay out, so trading well funds the next push instead of just
   // clearing the lane.
   const BOUNTY = 0.3;
+
+  // Slow-charging comeback tool: no credit cost, pure patience. Enough to fire
+  // roughly twice in a full match if used promptly both times.
+  const SUPER_CHARGE_TIME = 45;
+  const STRIKE_DAMAGE = 200;
 
   const FOE_COLOR = "#e8624f";
 
   let W = 0, H = 0, laneW = 0;
   let state = null;
   let last = 0;
+  let tankBtn = null;
+  let tankSlotKey = null;
 
   // ---------- theme ----------
 
@@ -119,6 +144,7 @@
     return {
       credits: START_CREDITS,
       refineries: 0,
+      warFactory: false,
       lane: 1,
       // Two lines, like C&C: queuing a tank never blocks infantry, so a tap
       // always starts something moving.
@@ -126,9 +152,24 @@
       units: [],
       fx: [],
       yard: { you: YARD_HP, foe: YARD_HP },
-      harvester: { t: 0, lastHarvestT: -999 },
-      foe: { credits: 250, build: { inf: null, veh: null } },
+      harvester: {
+        t: 0, lastHarvestT: -999,
+        hp: HARVESTER_MAX_HP, max: HARVESTER_MAX_HP,
+        destroyed: false, rebuildAt: 0, warned: false,
+      },
+      // Split into two streams, not one shared pool: the infantry line grabs
+      // whatever it can afford the instant it's free, which starved the
+      // vehicle line of the surplus it needs to ever save for 600 — verified
+      // in the headless sim, foe.credits never rose past ~190 in a full
+      // match. A human can choose to save; a script that spends greedily
+      // every frame can't, so it gets its own guaranteed share instead.
+      foe: { credits: { inf: 150, veh: 100 }, warFactory: false, build: { inf: null, veh: null } },
       elapsed: 0,
+      shake: 0,
+      superCharge: 0,
+      frontPressure: false,
+      warned50: false,
+      warned25: false,
       over: null,
     };
   }
@@ -137,7 +178,51 @@
     state.refineries + state.queues.veh.filter((q) => q.key === "refinery").length;
 
   const incomeMul = () => 1 + REFINERY_BONUS * state.refineries;
-  const defOf = (key) => (key === "refinery" ? REFINERY : UNITS[key]);
+
+  function defOf(key) {
+    if (key === "refinery") return REFINERY;
+    if (key === "warfactory") return WAR_FACTORY;
+    return UNITS[key];
+  }
+
+  // The tank build slot doubles as the War Factory unlock until it's built —
+  // one button, two meanings, so the grid never needs a 5th slot.
+  function slotDef(nominalKey) {
+    if (nominalKey === "tank" && !state.warFactory) return { ...WAR_FACTORY, slotKey: "warfactory" };
+    if (nominalKey === "tank") return { ...UNITS.tank, slotKey: "tank" };
+    return { ...defOf(nominalKey), slotKey: nominalKey };
+  }
+
+  function isCapped(key) {
+    if (key === "refinery") return refineryCount() >= MAX_REFINERIES;
+    if (key === "warfactory") return state.warFactory || state.queues.veh.some((q) => q.key === "warfactory");
+    return false;
+  }
+
+  function harvesterY() {
+    const out = harvestPosition(state.harvester.t / HARVEST_CYCLE);
+    const base = H - TOP - 12;
+    return base - out * (H - TOP * 2 - 44);
+  }
+
+  function addShake(m) {
+    state.shake = Math.min(9, state.shake + m);
+  }
+
+  // A unit sitting deep in enemy territory in the shared lane, uncontested,
+  // is treated as disrupting their production — the mirror of the harvester
+  // being raidable, without needing a second animated harvester to collide with.
+  function isFrontPressured() {
+    for (const u of state.units) {
+      if (u.side !== "you" || u.lane !== 1 || u.hp <= 0) continue;
+      if (u.y > TOP + 70) continue;
+      const contested = state.units.some(
+        (o) => o.side === "foe" && o.lane === 1 && o.hp > 0 && Math.abs(o.y - u.y) < 60
+      );
+      if (!contested) return true;
+    }
+    return false;
+  }
 
   // ---------- building ----------
 
@@ -145,18 +230,22 @@
 
   function renderButtons() {
     buildEl.replaceChildren();
-    BUTTONS.forEach((key) => {
-      const d = defOf(key);
+    BUTTONS.forEach((nominalKey) => {
+      const slot = slotDef(nominalKey);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "rts-btn";
-      btn.dataset.key = key;
+      btn.dataset.key = nominalKey; // fixed; the tank slot's *meaning* changes, not this
       btn.innerHTML =
-        `<span class="rts-btn-name">${d.label}</span>` +
-        `<span class="rts-btn-cost">&cent;${d.cost}</span>` +
+        `<span class="rts-btn-name">${slot.label}</span>` +
+        `<span class="rts-btn-cost">&cent;${slot.cost}</span>` +
         `<span class="rts-btn-prog"></span>`;
-      btn.addEventListener("click", () => queueItem(key, btn));
+      btn.addEventListener("click", () => {
+        const key = nominalKey === "tank" ? slotDef("tank").slotKey : nominalKey;
+        queueItem(key, btn);
+      });
       buildEl.appendChild(btn);
+      if (nominalKey === "tank") { tankBtn = btn; tankSlotKey = slot.slotKey; }
     });
   }
 
@@ -164,8 +253,8 @@
     if (state.over) return;
     const d = defOf(key);
 
-    if (key === "refinery" && refineryCount() >= MAX_REFINERIES) {
-      say("Refineries at maximum.");
+    if (isCapped(key)) {
+      say(key === "refinery" ? "Refineries at maximum." : "War Factory already under construction.");
       return;
     }
     if (state.credits < d.cost) {
@@ -202,7 +291,7 @@
     });
   }
 
-  function puff(x, y, color) { state.fx.push({ type: "puff", x, y, t: 0, color }); }
+  function puff(x, y, color, size = 1) { state.fx.push({ type: "puff", x, y, t: 0, color, size }); }
   function float(x, y, text, color) { state.fx.push({ type: "text", x, y, t: 0, text, color }); }
 
   // ---------- simulation ----------
@@ -210,27 +299,39 @@
   function update(dt) {
     if (state.over) return;
     state.elapsed += dt;
+    state.shake = Math.max(0, state.shake - dt * 14);
+    state.superCharge = Math.min(1, state.superCharge + dt / SUPER_CHARGE_TIME);
 
     const h = state.harvester;
-    const prevHarvestP = h.t / HARVEST_CYCLE;
-    h.t += dt;
-    const harvestP = h.t / HARVEST_CYCLE;
+    if (h.destroyed) {
+      if (state.elapsed >= h.rebuildAt) {
+        h.destroyed = false;
+        h.hp = HARVESTER_MAX_HP;
+        h.warned = false;
+        h.t = 0;
+        say("Harvester back online.");
+      }
+    } else {
+      const prevHarvestP = h.t / HARVEST_CYCLE;
+      h.t += dt;
+      const harvestP = h.t / HARVEST_CYCLE;
 
-    // The field taps out the instant loading starts, not on arrival — it
-    // should already look picked-over while the harvester is still parked.
-    if (prevHarvestP < FIELD_ENTER && harvestP >= FIELD_ENTER) {
-      h.lastHarvestT = state.elapsed;
+      // The field taps out the instant loading starts, not on arrival — it
+      // should already look picked-over while the harvester is still parked.
+      if (prevHarvestP < FIELD_ENTER && harvestP >= FIELD_ENTER) {
+        h.lastHarvestT = state.elapsed;
+      }
+      // Paid the moment it's back, not after an extra idle beat at the yard.
+      // With any gap, arriving and getting paid read as two unrelated events
+      // instead of one causing the other.
+      if (prevHarvestP < BASE_ARRIVE && harvestP >= BASE_ARRIVE) {
+        const amount = Math.round(HARVEST_AMOUNT * incomeMul());
+        state.credits += amount;
+        float(laneX(1), BOT() - 22, "+" + amount, palette.accent);
+        puff(laneX(1), BOT() - 22, palette.accent);
+      }
+      if (h.t >= HARVEST_CYCLE) h.t -= HARVEST_CYCLE;
     }
-    // Paid the moment it's back, not after an extra idle beat at the yard.
-    // With any gap, arriving and getting paid read as two unrelated events
-    // instead of one causing the other.
-    if (prevHarvestP < BASE_ARRIVE && harvestP >= BASE_ARRIVE) {
-      const amount = Math.round(HARVEST_AMOUNT * incomeMul());
-      state.credits += amount;
-      float(laneX(1), BOT() - 22, "+" + amount, palette.accent);
-      puff(laneX(1), BOT() - 22, palette.accent);
-    }
-    if (h.t >= HARVEST_CYCLE) h.t -= HARVEST_CYCLE;
 
     for (const line of ["inf", "veh"]) {
       const q = state.queues[line];
@@ -242,38 +343,72 @@
         if (job.key === "refinery") {
           state.refineries += 1;
           say("Refinery online. Income up.");
+        } else if (job.key === "warfactory") {
+          state.warFactory = true;
+          say("War Factory online. Tanks unlocked.");
         } else {
           spawn("you", job.key, state.lane);
         }
       }
     }
 
-    foeThink(dt);
+    const pressured = isFrontPressured();
+    if (pressured && !state.frontPressure) say("Enemy supply lines under pressure!");
+    state.frontPressure = pressured;
+
+    foeThink(dt, pressured);
     stepUnits(dt);
     stepFx(dt);
+    checkYardWarnings();
     checkOver();
   }
 
-  function foeThink(dt) {
+  // How much of the foe's income each line gets. Verified against the sim:
+  // giving veh a guaranteed 45% gets a War Factory built by roughly the
+  // 90-110s mark once armor unlocks at t=35, without starving infantry.
+  const FOE_INF_SHARE = 0.55;
+  const FOE_VEH_SHARE = 0.45;
+
+  function foeThink(dt, pressured) {
     const f = state.foe;
     // Starts below the player's ~33/s so the opening is survivable, then
-    // overtakes it, so sitting on a lead loses.
-    f.credits += dt * (22 + Math.min(34, state.elapsed * 0.22));
+    // overtakes it, so sitting on a lead loses. Halved while their forward
+    // lane is uncontested — the cost of letting a raider sit there.
+    const rate = (22 + Math.min(34, state.elapsed * 0.22)) * (pressured ? FRONT_INCOME_MULT : 1);
+    // A small trickle to veh even before armor unlocks at t=35, so it isn't
+    // starting the real 45% split from zero the moment it becomes eligible —
+    // tried 0% pre-35 first and it pushed the War Factory too late to matter
+    // (untested past 150s in the sim) while also barely helping the opening.
+    // The full 45% pre-35, tried first, over-corrected the other way: it
+    // banked so much unspent that infantry's own pace slowed, stretching an
+    // idle opponent's survival from ~60s to ~80s in the sim.
+    if (state.elapsed < 35) {
+      f.credits.inf += dt * rate * 0.85;
+      f.credits.veh += dt * rate * 0.15;
+    } else {
+      f.credits.inf += dt * rate * FOE_INF_SHARE;
+      f.credits.veh += dt * rate * FOE_VEH_SHARE;
+    }
 
     for (const line of ["inf", "veh"]) {
       const job = f.build[line];
       if (job) {
         job.left -= dt;
-        if (job.left <= 0) { spawn("foe", job.key, job.lane); f.build[line] = null; }
+        if (job.left <= 0) {
+          if (job.key === "warfactory") f.warFactory = true;
+          else spawn("foe", job.key, job.lane);
+          f.build[line] = null;
+        }
         continue;
       }
 
       const t = state.elapsed;
+      const armor = f.warFactory ? "tank" : "warfactory";
       const table = t < 35 ? [["rifle", 7], ["rocket", 3]]
-                  : t < 80 ? [["rifle", 4], ["rocket", 3], ["tank", 3]]
-                           : [["rifle", 2], ["rocket", 4], ["tank", 4]];
+                  : t < 80 ? [["rifle", 4], ["rocket", 3], [armor, 3]]
+                           : [["rifle", 2], ["rocket", 4], [armor, 4]];
 
-      const pool = table.filter(([k]) => UNITS[k].from === line && UNITS[k].cost <= f.credits);
+      const pool = table.filter(([k]) => defOf(k).from === line && defOf(k).cost <= f.credits[line]);
       if (!pool.length) continue;
 
       const total = pool.reduce((s, [, w]) => s + w, 0);
@@ -281,8 +416,8 @@
       let pick = pool[0][0];
       for (const [k, w] of pool) { r -= w; if (r <= 0) { pick = k; break; } }
 
-      f.credits -= UNITS[pick].cost;
-      f.build[line] = { key: pick, left: UNITS[pick].build * 0.9, lane: Math.floor(Math.random() * LANES) };
+      f.credits[line] -= defOf(pick).cost;
+      f.build[line] = { key: pick, left: defOf(pick).build * 0.9, lane: Math.floor(Math.random() * LANES) };
     }
   }
 
@@ -293,28 +428,57 @@
       u.cd = Math.max(0, u.cd - dt);
       u.flash = Math.max(0, u.flash - dt);
 
-      let target = null, best = Infinity;
+      let target = null, best = Infinity, targetIsHarvester = false;
       for (const o of state.units) {
         if (o.hp <= 0 || o.side === u.side || o.lane !== u.lane) continue;
         const gap = Math.abs(o.y - u.y);
-        if (gap < best) { best = gap; target = o; }
+        if (gap < best) { best = gap; target = o; targetIsHarvester = false; }
+      }
+      // An undefended lane 1 leaves the harvester itself in range — the raid
+      // threat that gives the economy real stakes.
+      if (u.side === "foe" && u.lane === 1 && !state.harvester.destroyed) {
+        const gap = Math.abs(harvesterY() - u.y);
+        if (gap < best) { best = gap; targetIsHarvester = true; }
       }
 
-      if (target && best <= d.range) {
+      if ((target || targetIsHarvester) && best <= d.range) {
         if (u.cd === 0) {
-          const bonus = d.strongVs && UNITS[target.key].kind === d.strongVs ? COUNTER_BONUS : 1;
-          target.hp -= d.dmg * bonus;
           u.cd = d.rof;
           u.flash = 0.1;
 
-          if (target.hp <= 0) {
-            const reward = Math.round(UNITS[target.key].cost * BOUNTY);
-            puff(laneX(target.lane), target.y, u.side === "you" ? palette.accent : FOE_COLOR);
-            if (u.side === "you") {
-              state.credits += reward;
-              float(laneX(target.lane), target.y, "+" + reward, palette.accent);
-            } else {
-              state.foe.credits += reward;
+          if (targetIsHarvester) {
+            const hv = state.harvester;
+            hv.hp -= d.dmg;
+            puff(laneX(1), harvesterY(), FOE_COLOR, 0.9);
+            if (hv.hp <= 0) {
+              hv.hp = 0;
+              hv.destroyed = true;
+              hv.rebuildAt = state.elapsed + HARVESTER_REBUILD_TIME;
+              puff(laneX(1), harvesterY(), FOE_COLOR, 2.2);
+              addShake(4);
+              say("Harvester destroyed! Rebuilding...");
+            } else if (!hv.warned && hv.hp <= HARVESTER_MAX_HP * 0.5) {
+              hv.warned = true;
+              say("Harvester under attack!");
+            }
+          } else {
+            const bonus = d.strongVs && UNITS[target.key].kind === d.strongVs ? COUNTER_BONUS : 1;
+            target.hp -= d.dmg * bonus;
+
+            if (target.hp <= 0) {
+              const tk = UNITS[target.key];
+              const reward = Math.round(tk.cost * BOUNTY);
+              const size = tk.kind === "veh" ? 1.8 : tk.kind === "at" ? 1.3 : 1;
+              puff(laneX(target.lane), target.y, u.side === "you" ? palette.accent : FOE_COLOR, size);
+              if (u.side === "you") {
+                state.credits += reward;
+                float(laneX(target.lane), target.y, "+" + reward, palette.accent);
+              } else {
+                // Split the same way ongoing income is, so a kill can't
+                // accidentally fast-track the vehicle line past its share.
+                state.foe.credits.inf += reward * FOE_INF_SHARE;
+                state.foe.credits.veh += reward * FOE_VEH_SHARE;
+              }
             }
           }
         }
@@ -332,6 +496,7 @@
         state.yard[u.side === "you" ? "foe" : "you"] -= d.dmg;
         u.cd = d.rof;
         u.flash = 0.1;
+        if (u.side === "foe") addShake(d.dmg * 0.12);
       }
     }
 
@@ -340,7 +505,18 @@
 
   function stepFx(dt) {
     for (const f of state.fx) f.t += dt;
-    state.fx = state.fx.filter((f) => f.t < (f.type === "text" ? 1.1 : 0.4));
+    state.fx = state.fx.filter((f) => f.t < (f.type === "text" ? 1.1 : f.type === "strike" ? 0.5 : 0.4));
+  }
+
+  function checkYardWarnings() {
+    if (!state.warned50 && state.yard.you <= YARD_HP * 0.5) {
+      state.warned50 = true;
+      say("Base under attack — yard at half strength!");
+    }
+    if (!state.warned25 && state.yard.you <= YARD_HP * 0.25) {
+      state.warned25 = true;
+      say("Yard critical!");
+    }
   }
 
   function checkOver() {
@@ -355,10 +531,38 @@
     say(msg);
   }
 
+  // ---------- strike ----------
+
+  function fireStrike() {
+    if (state.over || state.superCharge < 1) return;
+    state.superCharge = 0;
+    const lane = state.lane;
+    state.fx.push({ type: "strike", lane, t: 0 });
+    addShake(4.5);
+    say("Air strike!");
+
+    for (const u of state.units) {
+      if (u.side !== "foe" || u.lane !== lane || u.hp <= 0) continue;
+      u.hp -= STRIKE_DAMAGE;
+      if (u.hp <= 0) {
+        const reward = Math.round(UNITS[u.key].cost * BOUNTY);
+        state.credits += reward;
+        puff(laneX(lane), u.y, palette.accent, UNITS[u.key].kind === "veh" ? 1.8 : 1.3);
+        float(laneX(lane), u.y, "+" + reward, palette.accent);
+      } else {
+        puff(laneX(lane), u.y, palette.accent, 1.2);
+      }
+    }
+  }
+
   // ---------- drawing ----------
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    if (state.shake > 0.01) {
+      ctx.translate((Math.random() - 0.5) * state.shake, (Math.random() - 0.5) * state.shake * 0.6);
+    }
 
     for (let i = 0; i < LANES; i++) {
       ctx.fillStyle = i === state.lane ? withAlpha(palette.accent, 0.07) : palette.panel;
@@ -391,6 +595,8 @@
     drawHarvester();
     for (const u of state.units) drawUnit(u);
     drawFx();
+
+    ctx.restore();
   }
 
   function drawYard(y, color, hp) {
@@ -445,12 +651,23 @@
   }
 
   function drawHarvester() {
-    const p = state.harvester.t / HARVEST_CYCLE;
-    const out = harvestPosition(p);
-    const cargo = harvestCargo(p);
-    const base = H - TOP - 12;
-    const y = base - out * (H - TOP * 2 - 44);
+    const hv = state.harvester;
     const x = laneX(1);
+    const y = harvesterY();
+
+    if (hv.destroyed) {
+      ctx.fillStyle = withAlpha(palette.muted, 0.55);
+      ctx.fillRect(x - 8, y - 6, 16, 12);
+      ctx.strokeStyle = withAlpha(FOE_COLOR, 0.75);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 7, y - 5); ctx.lineTo(x + 7, y + 5);
+      ctx.moveTo(x + 7, y - 5); ctx.lineTo(x - 7, y + 5);
+      ctx.stroke();
+      return;
+    }
+
+    const cargo = harvestCargo(hv.t / HARVEST_CYCLE);
 
     ctx.fillStyle = withAlpha(palette.accent, 0.35);
     ctx.fillRect(x - 8, y - 7, 16, 14);
@@ -462,6 +679,13 @@
       // Fills bottom-up, like a hopper loading rather than a light switching on.
       const h = 6 * cargo;
       ctx.fillRect(x - 4, y + 3 - h, 8, h);
+    }
+
+    if (hv.hp < hv.max) {
+      ctx.fillStyle = withAlpha(palette.muted, 0.45);
+      ctx.fillRect(x - 9, y + 10, 18, 2);
+      ctx.fillStyle = palette.accent;
+      ctx.fillRect(x - 9, y + 10, 18 * (hv.hp / hv.max), 2);
     }
   }
 
@@ -523,12 +747,18 @@
 
   function drawFx() {
     for (const f of state.fx) {
+      if (f.type === "strike") {
+        const k = f.t / 0.5;
+        ctx.fillStyle = withAlpha("#ffffff", (1 - k) * 0.5);
+        ctx.fillRect(f.lane * laneW, TOP, laneW, H - TOP * 2);
+        continue;
+      }
       if (f.type === "puff") {
         const k = f.t / 0.4;
         ctx.strokeStyle = withAlpha(f.color, 1 - k);
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(f.x, f.y, 4 + k * 12, 0, Math.PI * 2);
+        ctx.arc(f.x, f.y, 4 + k * 12 * (f.size || 1), 0, Math.PI * 2);
         ctx.stroke();
       } else {
         const k = f.t / 1.1;
@@ -556,13 +786,24 @@
     foeFill.style.width = Math.max(0, (state.yard.foe / YARD_HP) * 100) + "%";
     youFill.style.width = Math.max(0, (state.yard.you / YARD_HP) * 100) + "%";
 
+    strikeEl.disabled = Boolean(state.over) || state.superCharge < 1;
+    strikeEl.classList.toggle("is-ready", !state.over && state.superCharge >= 1);
+    strikeFillEl.style.width = Math.min(1, state.superCharge) * 100 + "%";
+
+    const slot = slotDef("tank");
+    if (slot.slotKey !== tankSlotKey && tankBtn) {
+      tankSlotKey = slot.slotKey;
+      tankBtn.querySelector(".rts-btn-name").textContent = slot.label;
+      tankBtn.querySelector(".rts-btn-cost").innerHTML = "&cent;" + slot.cost;
+    }
+
     [...buildEl.children].forEach((btn) => {
-      const key = btn.dataset.key;
+      const nominalKey = btn.dataset.key;
+      const key = nominalKey === "tank" ? tankSlotKey : nominalKey;
       const d = defOf(key);
       const q = state.queues[d.from];
-      const capped = key === "refinery" && refineryCount() >= MAX_REFINERIES;
 
-      btn.disabled = Boolean(state.over) || capped || state.credits < d.cost;
+      btn.disabled = Boolean(state.over) || isCapped(key) || state.credits < d.cost;
 
       const head = q[0];
       btn.querySelector(".rts-btn-prog").style.width =
@@ -596,6 +837,7 @@
     hintEl.textContent = `Lane ${state.lane + 1} selected.`;
   });
 
+  strikeEl.addEventListener("click", fireStrike);
   restartEl.addEventListener("click", reset);
 
   window.addEventListener("resize", () => {
@@ -611,8 +853,8 @@
   }
 
   resize();
+  reset();          // state must exist before renderButtons() reads state.warFactory
   renderButtons();
-  reset();
   last = performance.now();
   requestAnimationFrame(frame);
 })();

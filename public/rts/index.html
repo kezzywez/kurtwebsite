@@ -44,8 +44,8 @@
     <section>
       <h2 class="section-label">Tiberium Skirmish</h2>
       <p class="rts-intro">
-        Your harvester funds the war. Queue units, pick a lane, and level their
-        construction yard before they level yours.
+        Your harvester funds the war — defend it, or raid theirs. Build a War
+        Factory to unlock tanks, and save your Air Strike for when it counts.
       </p>
 
       <div class="rts" id="rts">
@@ -75,6 +75,11 @@
         </div>
 
         <p class="rts-hint" id="rtsHint">Tap a lane to send new units there.</p>
+
+        <button class="rts-strike" id="rtsStrike" type="button" disabled>
+          <span class="rts-strike-name">Air Strike — hits the selected lane</span>
+          <span class="rts-strike-track"><span class="rts-strike-fill" id="rtsStrikeFill"></span></span>
+        </button>
 
         <div class="rts-build" id="rtsBuild"></div>
 

@@ -1566,3 +1566,64 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   .rts-btn:active:not(:disabled) { transform: none; }
   .rts-btn.is-hit { animation: none; }
 }
+
+/* ---------- RTS: air strike meter ---------- */
+
+.rts-strike {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 14px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.rts-strike:disabled { opacity: 0.5; cursor: default; }
+
+.rts-strike-name { flex: 1; min-width: 0; }
+
+.rts-strike-track {
+  flex: 0 0 90px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--bg-elevated-2);
+  overflow: hidden;
+}
+
+.rts-strike-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.rts-strike.is-ready {
+  border-color: var(--accent);
+  animation: rts-strike-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes rts-strike-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+  50% { box-shadow: 0 0 0 5px transparent; }
+}
+
+@media (max-width: 640px) {
+  .rts-strike { padding: 8px 12px; font-size: 0.78rem; }
+  .rts-strike-track { flex-basis: 64px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rts-strike.is-ready { animation: none; }
+}
