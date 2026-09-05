@@ -25,6 +25,8 @@
   const youFill = document.getElementById("youYardFill");
   const strikeEl = document.getElementById("rtsStrike");
   const strikeFillEl = document.getElementById("rtsStrikeFill");
+  const warFactoryEl = document.getElementById("rtsWarFactory");
+  const techRowEl = document.getElementById("rtsTechRow");
 
   // ---------- balance ----------
 
@@ -72,15 +74,26 @@
   // Tank is gated behind a one-time structure, same as real C&C's War Factory —
   // the match now has an opening (infantry only), a tech decision, and an
   // armoured lategame, instead of every option being open from second one.
-  // The enemy pays the same tax so it stays fair.
+  // It's its own row below the build grid rather than sharing the tank slot,
+  // so the grid never shows two different meanings on one button.
   const WAR_FACTORY = { label: "War Factory", cost: 600, build: 8, from: "veh" };
+
+  // A second tech path, parallel to the War Factory: build the structure once,
+  // then buy the upgrade it unlocks. This one raises the stats of every
+  // infantry unit built afterward, rather than unlocking a new unit outright.
+  const TECH_CENTER = { label: "Tech Center", cost: 450, build: 7, from: "inf" };
+  const INF_UPGRADE = { label: "Upgrade Infantry", cost: 350, build: 5, from: "inf" };
+  const INF_HP_MUL = 1.25;
+  const INF_DMG_MUL = 1.2;
 
   // Kills pay out, so trading well funds the next push instead of just
   // clearing the lane.
   const BOUNTY = 0.3;
 
   // Slow-charging comeback tool: no credit cost, pure patience. Enough to fire
-  // roughly twice in a full match if used promptly both times.
+  // roughly twice in a full match if used promptly both times. The enemy
+  // charges the same meter on the same clock — it just can't tap a lane, so it
+  // fires at whichever lane is carrying the most of your army.
   const SUPER_CHARGE_TIME = 45;
   const STRIKE_DAMAGE = 200;
 
@@ -89,8 +102,7 @@
   let W = 0, H = 0, laneW = 0;
   let state = null;
   let last = 0;
-  let tankBtn = null;
-  let tankSlotKey = null;
+  let techRowKey = null;
 
   // ---------- theme ----------
 
@@ -119,9 +131,15 @@
 
   function resize() {
     const cssW = canvas.parentElement.clientWidth;
-    // 0.40 rather than a fixed height: the bars, HUD and build row all have to
-    // share a phone screen with this.
-    const cssH = Math.max(240, Math.min(Math.round(window.innerHeight * 0.4), 400));
+    // 0.40 on desktop; a narrow viewport now has to fit two more rows below
+    // the grid (War Factory, Tech Center) than it did originally, so the
+    // canvas gives up more of its share there — measured via a same-origin
+    // iframe probe at 390x844 and 360x740, since the fraction below was
+    // overflowing by 24-86px before this was added.
+    const compact = window.innerWidth <= 640;
+    const ratio = compact ? 0.30 : 0.4;
+    const minH = compact ? 170 : 240;
+    const cssH = Math.max(minH, Math.min(Math.round(window.innerHeight * ratio), 400));
     const dpr = window.devicePixelRatio || 1;
 
     canvas.style.height = cssH + "px";
@@ -145,6 +163,8 @@
       credits: START_CREDITS,
       refineries: 0,
       warFactory: false,
+      techCenter: false,
+      infUpgrade: false,
       lane: 1,
       // Two lines, like C&C: queuing a tank never blocks infantry, so a tap
       // always starts something moving.
@@ -157,13 +177,12 @@
         hp: HARVESTER_MAX_HP, max: HARVESTER_MAX_HP,
         destroyed: false, rebuildAt: 0, warned: false,
       },
-      // Split into two streams, not one shared pool: the infantry line grabs
-      // whatever it can afford the instant it's free, which starved the
-      // vehicle line of the surplus it needs to ever save for 600 — verified
-      // in the headless sim, foe.credits never rose past ~190 in a full
-      // match. A human can choose to save; a script that spends greedily
-      // every frame can't, so it gets its own guaranteed share instead.
-      foe: { credits: { inf: 150, veh: 100 }, warFactory: false, build: { inf: null, veh: null } },
+      foe: {
+        credits: { inf: 150, veh: 100 },
+        warFactory: false, techCenter: false, infUpgrade: false,
+        build: { inf: null, veh: null },
+        superCharge: 0,
+      },
       elapsed: 0,
       shake: 0,
       superCharge: 0,
@@ -182,20 +201,17 @@
   function defOf(key) {
     if (key === "refinery") return REFINERY;
     if (key === "warfactory") return WAR_FACTORY;
+    if (key === "techcenter") return TECH_CENTER;
+    if (key === "infupgrade") return INF_UPGRADE;
     return UNITS[key];
   }
 
-  // The tank build slot doubles as the War Factory unlock until it's built —
-  // one button, two meanings, so the grid never needs a 5th slot.
-  function slotDef(nominalKey) {
-    if (nominalKey === "tank" && !state.warFactory) return { ...WAR_FACTORY, slotKey: "warfactory" };
-    if (nominalKey === "tank") return { ...UNITS.tank, slotKey: "tank" };
-    return { ...defOf(nominalKey), slotKey: nominalKey };
-  }
-
   function isCapped(key) {
+    if (key === "tank") return !state.warFactory; // locked, not just expensive
     if (key === "refinery") return refineryCount() >= MAX_REFINERIES;
     if (key === "warfactory") return state.warFactory || state.queues.veh.some((q) => q.key === "warfactory");
+    if (key === "techcenter") return state.techCenter || state.queues.inf.some((q) => q.key === "techcenter");
+    if (key === "infupgrade") return state.infUpgrade || state.queues.inf.some((q) => q.key === "infupgrade");
     return false;
   }
 
@@ -230,22 +246,18 @@
 
   function renderButtons() {
     buildEl.replaceChildren();
-    BUTTONS.forEach((nominalKey) => {
-      const slot = slotDef(nominalKey);
+    BUTTONS.forEach((key) => {
+      const d = defOf(key);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "rts-btn";
-      btn.dataset.key = nominalKey; // fixed; the tank slot's *meaning* changes, not this
+      btn.dataset.key = key;
       btn.innerHTML =
-        `<span class="rts-btn-name">${slot.label}</span>` +
-        `<span class="rts-btn-cost">&cent;${slot.cost}</span>` +
+        `<span class="rts-btn-name">${d.label}</span>` +
+        `<span class="rts-btn-cost">&cent;${d.cost}</span>` +
         `<span class="rts-btn-prog"></span>`;
-      btn.addEventListener("click", () => {
-        const key = nominalKey === "tank" ? slotDef("tank").slotKey : nominalKey;
-        queueItem(key, btn);
-      });
+      btn.addEventListener("click", () => queueItem(key, btn));
       buildEl.appendChild(btn);
-      if (nominalKey === "tank") { tankBtn = btn; tankSlotKey = slot.slotKey; }
     });
   }
 
@@ -254,7 +266,14 @@
     const d = defOf(key);
 
     if (isCapped(key)) {
-      say(key === "refinery" ? "Refineries at maximum." : "War Factory already under construction.");
+      const msg = {
+        tank: "Build a War Factory first.",
+        refinery: "Refineries at maximum.",
+        warfactory: "War Factory already under construction.",
+        techcenter: "Tech Center already under construction.",
+        infupgrade: "Infantry already upgraded.",
+      }[key];
+      say(msg || "Not available.");
       return;
     }
     if (state.credits < d.cost) {
@@ -284,10 +303,13 @@
 
   function spawn(side, key, lane) {
     const d = UNITS[key];
+    const upgraded = side === "you" && state.infUpgrade && (d.kind === "inf" || d.kind === "at");
+    const hp = upgraded ? Math.round(d.hp * INF_HP_MUL) : d.hp;
     state.units.push({
       side, key, lane,
       y: side === "you" ? BOT() - 14 : TOP + 14,
-      hp: d.hp, max: d.hp, cd: 0, flash: 0, walk: Math.random() * 6,
+      hp, max: hp, cd: 0, flash: 0, walk: Math.random() * 6,
+      dmgMul: upgraded ? INF_DMG_MUL : 1,
     });
   }
 
@@ -346,6 +368,12 @@
         } else if (job.key === "warfactory") {
           state.warFactory = true;
           say("War Factory online. Tanks unlocked.");
+        } else if (job.key === "techcenter") {
+          state.techCenter = true;
+          say("Tech Center online. Infantry upgrade available.");
+        } else if (job.key === "infupgrade") {
+          state.infUpgrade = true;
+          say("Infantry upgraded.");
         } else {
           spawn("you", job.key, state.lane);
         }
@@ -357,6 +385,7 @@
     state.frontPressure = pressured;
 
     foeThink(dt, pressured);
+    foeStrikeCheck(dt);
     stepUnits(dt);
     stepFx(dt);
     checkYardWarnings();
@@ -365,7 +394,11 @@
 
   // How much of the foe's income each line gets. Verified against the sim:
   // giving veh a guaranteed 45% gets a War Factory built by roughly the
-  // 90-110s mark once armor unlocks at t=35, without starving infantry.
+  // 90-110s mark once armor unlocks at t=35, without starving infantry. Before
+  // t=35 the veh line has nothing to spend on yet, so only a small trickle
+  // goes there pre-unlock — a full 45% split from t=0 was tried first and
+  // over-banked, which slowed infantry's own pace enough that an idle
+  // opponent's survival time stretched from ~60s to ~80s in the sim.
   const FOE_INF_SHARE = 0.55;
   const FOE_VEH_SHARE = 0.45;
 
@@ -375,13 +408,6 @@
     // overtakes it, so sitting on a lead loses. Halved while their forward
     // lane is uncontested — the cost of letting a raider sit there.
     const rate = (22 + Math.min(34, state.elapsed * 0.22)) * (pressured ? FRONT_INCOME_MULT : 1);
-    // A small trickle to veh even before armor unlocks at t=35, so it isn't
-    // starting the real 45% split from zero the moment it becomes eligible —
-    // tried 0% pre-35 first and it pushed the War Factory too late to matter
-    // (untested past 150s in the sim) while also barely helping the opening.
-    // The full 45% pre-35, tried first, over-corrected the other way: it
-    // banked so much unspent that infantry's own pace slowed, stretching an
-    // idle opponent's survival from ~60s to ~80s in the sim.
     if (state.elapsed < 35) {
       f.credits.inf += dt * rate * 0.85;
       f.credits.veh += dt * rate * 0.15;
@@ -389,6 +415,7 @@
       f.credits.inf += dt * rate * FOE_INF_SHARE;
       f.credits.veh += dt * rate * FOE_VEH_SHARE;
     }
+    f.superCharge = Math.min(1, f.superCharge + dt / SUPER_CHARGE_TIME);
 
     for (const line of ["inf", "veh"]) {
       const job = f.build[line];
@@ -396,6 +423,8 @@
         job.left -= dt;
         if (job.left <= 0) {
           if (job.key === "warfactory") f.warFactory = true;
+          else if (job.key === "techcenter") f.techCenter = true;
+          else if (job.key === "infupgrade") f.infUpgrade = true;
           else spawn("foe", job.key, job.lane);
           f.build[line] = null;
         }
@@ -403,10 +432,19 @@
       }
 
       const t = state.elapsed;
-      const armor = f.warFactory ? "tank" : "warfactory";
-      const table = t < 35 ? [["rifle", 7], ["rocket", 3]]
-                  : t < 80 ? [["rifle", 4], ["rocket", 3], [armor, 3]]
-                           : [["rifle", 2], ["rocket", 4], [armor, 4]];
+      let table;
+      if (line === "veh") {
+        const armor = f.warFactory ? "tank" : "warfactory";
+        table = t < 35 ? [] : t < 80 ? [["rifle", 4], ["rocket", 3], [armor, 3]]
+                                     : [["rifle", 2], ["rocket", 4], [armor, 4]];
+      } else {
+        // Infantry line mostly churns rifle/rocket; occasionally detours into
+        // the tech path once there's enough of an economy to justify it.
+        const tech = f.infUpgrade ? null : f.techCenter ? "infupgrade" : "techcenter";
+        table = t < 50 || !tech
+          ? [["rifle", 7], ["rocket", 3]]
+          : [["rifle", 6], ["rocket", 3], [tech, 1.5]];
+      }
 
       const pool = table.filter(([k]) => defOf(k).from === line && defOf(k).cost <= f.credits[line]);
       if (!pool.length) continue;
@@ -418,6 +456,39 @@
 
       f.credits[line] -= defOf(pick).cost;
       f.build[line] = { key: pick, left: defOf(pick).build * 0.9, lane: Math.floor(Math.random() * LANES) };
+    }
+  }
+
+  // The enemy's mirror of the player's Air Strike button. It can't tap a
+  // lane, so it fires at whichever lane is carrying the most of your army —
+  // and holds the charge rather than wasting it if nothing is there yet.
+  function foeStrikeCheck() {
+    const f = state.foe;
+    if (f.superCharge < 1) return;
+
+    let bestLane = -1, bestHp = 0;
+    for (let l = 0; l < LANES; l++) {
+      let hp = 0;
+      for (const u of state.units) if (u.side === "you" && u.lane === l && u.hp > 0) hp += u.hp;
+      if (hp > bestHp) { bestHp = hp; bestLane = l; }
+    }
+    if (bestLane === -1) return;
+
+    f.superCharge = 0;
+    state.fx.push({ type: "strike", lane: bestLane, t: 0, color: FOE_COLOR });
+    addShake(4.5);
+    say("Incoming air strike!");
+
+    for (const u of state.units) {
+      if (u.side !== "you" || u.lane !== bestLane || u.hp <= 0) continue;
+      u.hp -= STRIKE_DAMAGE;
+      const size = UNITS[u.key].kind === "veh" ? 1.8 : 1.3;
+      puff(laneX(bestLane), u.y, FOE_COLOR, u.hp <= 0 ? size : 1.2);
+      if (u.hp <= 0) {
+        const reward = Math.round(UNITS[u.key].cost * BOUNTY);
+        f.credits.inf += reward * FOE_INF_SHARE;
+        f.credits.veh += reward * FOE_VEH_SHARE;
+      }
     }
   }
 
@@ -445,10 +516,11 @@
         if (u.cd === 0) {
           u.cd = d.rof;
           u.flash = 0.1;
+          const dmg = d.dmg * (u.dmgMul || 1);
 
           if (targetIsHarvester) {
             const hv = state.harvester;
-            hv.hp -= d.dmg;
+            hv.hp -= dmg;
             puff(laneX(1), harvesterY(), FOE_COLOR, 0.9);
             if (hv.hp <= 0) {
               hv.hp = 0;
@@ -463,7 +535,7 @@
             }
           } else {
             const bonus = d.strongVs && UNITS[target.key].kind === d.strongVs ? COUNTER_BONUS : 1;
-            target.hp -= d.dmg * bonus;
+            target.hp -= dmg * bonus;
 
             if (target.hp <= 0) {
               const tk = UNITS[target.key];
@@ -493,7 +565,7 @@
         u.y += dir * d.speed * dt;
         u.walk += dt * 9;
       } else if (u.cd === 0) {
-        state.yard[u.side === "you" ? "foe" : "you"] -= d.dmg;
+        state.yard[u.side === "you" ? "foe" : "you"] -= d.dmg * (u.dmgMul || 1);
         u.cd = d.rof;
         u.flash = 0.1;
         if (u.side === "foe") addShake(d.dmg * 0.12);
@@ -531,7 +603,7 @@
     say(msg);
   }
 
-  // ---------- strike ----------
+  // ---------- strike (player) ----------
 
   function fireStrike() {
     if (state.over || state.superCharge < 1) return;
@@ -729,6 +801,16 @@
       ctx.fillRect(x + (u.side === "you" ? 2 : -4), y + fwd * 2, 2, 6 * -fwd);
     }
 
+    // A gold ring marks an upgraded (Tech Center) infantry unit, so the
+    // investment is visible on the field, not just in the stat sheet.
+    if (u.dmgMul && u.dmgMul > 1) {
+      ctx.strokeStyle = "#e8c14a";
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     if (u.flash > 0) {
       ctx.fillStyle = "#ffd88a";
       ctx.beginPath();
@@ -749,7 +831,7 @@
     for (const f of state.fx) {
       if (f.type === "strike") {
         const k = f.t / 0.5;
-        ctx.fillStyle = withAlpha("#ffffff", (1 - k) * 0.5);
+        ctx.fillStyle = withAlpha(f.color || "#ffffff", (1 - k) * 0.5);
         ctx.fillRect(f.lane * laneW, TOP, laneW, H - TOP * 2);
         continue;
       }
@@ -790,16 +872,35 @@
     strikeEl.classList.toggle("is-ready", !state.over && state.superCharge >= 1);
     strikeFillEl.style.width = Math.min(1, state.superCharge) * 100 + "%";
 
-    const slot = slotDef("tank");
-    if (slot.slotKey !== tankSlotKey && tankBtn) {
-      tankSlotKey = slot.slotKey;
-      tankBtn.querySelector(".rts-btn-name").textContent = slot.label;
-      tankBtn.querySelector(".rts-btn-cost").innerHTML = "&cent;" + slot.cost;
+    // War Factory row: its own line below the grid, hidden once built —
+    // nothing more to do there once the tank slot is unlocked.
+    warFactoryEl.hidden = state.warFactory;
+    if (!state.warFactory) {
+      warFactoryEl.disabled = Boolean(state.over) || isCapped("warfactory") || state.credits < WAR_FACTORY.cost;
+      const head = state.queues.veh[0];
+      warFactoryEl.querySelector(".rts-btn-prog").style.width =
+        head && head.key === "warfactory" ? (1 - head.left / head.total) * 100 + "%" : "0%";
+    }
+
+    // Tech row swaps label the same way the tank slot used to: Tech Center
+    // until built, then Upgrade Infantry, then hidden once bought.
+    techRowEl.hidden = state.infUpgrade;
+    if (!state.infUpgrade) {
+      const key = state.techCenter ? "infupgrade" : "techcenter";
+      const d = defOf(key);
+      if (key !== techRowKey) {
+        techRowKey = key;
+        techRowEl.querySelector(".rts-structure-name").textContent = d.label;
+        techRowEl.querySelector(".rts-structure-cost").innerHTML = "&cent;" + d.cost;
+      }
+      techRowEl.disabled = Boolean(state.over) || isCapped(key) || state.credits < d.cost;
+      const job = state.queues.inf[0];
+      techRowEl.querySelector(".rts-btn-prog").style.width =
+        job && job.key === key ? (1 - job.left / job.total) * 100 + "%" : "0%";
     }
 
     [...buildEl.children].forEach((btn) => {
-      const nominalKey = btn.dataset.key;
-      const key = nominalKey === "tank" ? tankSlotKey : nominalKey;
+      const key = btn.dataset.key;
       const d = defOf(key);
       const q = state.queues[d.from];
 
@@ -838,6 +939,10 @@
   });
 
   strikeEl.addEventListener("click", fireStrike);
+  warFactoryEl.addEventListener("click", () => queueItem("warfactory", warFactoryEl));
+  techRowEl.addEventListener("click", () => {
+    queueItem(state.techCenter ? "infupgrade" : "techcenter", techRowEl);
+  });
   restartEl.addEventListener("click", reset);
 
   window.addEventListener("resize", () => {
@@ -853,7 +958,7 @@
   }
 
   resize();
-  reset();          // state must exist before renderButtons() reads state.warFactory
+  reset();
   renderButtons();
   last = performance.now();
   requestAnimationFrame(frame);

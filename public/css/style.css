@@ -1405,14 +1405,14 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
-  padding: 10px 4px;
+  padding: 7px 3px;
   font: inherit;
   color: var(--text);
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -1424,11 +1424,51 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
 .rts-btn:disabled { opacity: 0.42; cursor: default; }
 
-.rts-btn-name { font-size: 0.82rem; font-weight: 600; }
+.rts-btn-name { font-size: 0.76rem; font-weight: 600; }
 
 .rts-btn-cost {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
+/* One-time structure purchases: War Factory and Tech Center. Full-width rows
+   below the unit grid rather than sharing a box with what they unlock, so a
+   button never has to carry two different meanings. */
+.rts-structure {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 13px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.rts-structure[hidden] { display: none; }
+
+.rts-structure:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.rts-structure:disabled { opacity: 0.45; cursor: default; }
+
+.rts-structure-cost {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
   color: var(--text-muted);
 }
 
@@ -1468,9 +1508,21 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
   .rts-bar-label { flex-basis: 4.6rem; }
 
-  .rts-btn { padding: 9px 3px; }
+  .rts-btn { padding: 6px 2px; }
 
-  .rts-btn-name { font-size: 0.78rem; }
+  .rts-btn-name { font-size: 0.72rem; }
+
+  .rts-structure { padding: 6px 11px; font-size: 0.76rem; margin-top: 5px; }
+
+  .rts-build { margin-top: 8px; }
+
+  .rts-hint { margin: 6px 0 0; font-size: 0.72rem; }
+
+  .rts-status { margin: 6px 0 0; min-height: 1.2em; }
+
+  .rts-bars { margin-bottom: 8px; }
+
+  .rts-stats { margin-bottom: 6px; }
 }
 
 @media (max-width: 640px) and (max-height: 950px) {
@@ -1553,7 +1605,8 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   border-color: var(--accent);
 }
 
-.rts-btn.is-hit {
+.rts-btn.is-hit,
+.rts-structure.is-hit {
   animation: rts-hit 0.32s ease-out;
 }
 
@@ -1562,9 +1615,13 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   100% { background: var(--bg-elevated); border-color: var(--border); }
 }
 
+.rts-structure:active:not(:disabled) { transform: scale(0.98); }
+
 @media (prefers-reduced-motion: reduce) {
-  .rts-btn:active:not(:disabled) { transform: none; }
-  .rts-btn.is-hit { animation: none; }
+  .rts-btn:active:not(:disabled),
+  .rts-structure:active:not(:disabled) { transform: none; }
+  .rts-btn.is-hit,
+  .rts-structure.is-hit { animation: none; }
 }
 
 /* ---------- RTS: air strike meter ---------- */
