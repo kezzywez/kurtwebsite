@@ -1,8 +1,9 @@
 // Tiberium Skirmish — a small lane-based RTS.
 //
-// Three lanes between two construction yards. Harvesters fund two production
-// queues; finished units walk their lane, fight what they meet, and chew on the
-// enemy yard if they get through. First yard to fall loses.
+// Three lanes between two construction yards. Each side runs a harvester that
+// funds two production queues; finished units walk their lane, fight what they
+// meet, and chew on the enemy yard if they get through. First yard to fall
+// loses.
 //
 // Lanes rather than free movement is a deliberate choice for touch: every order
 // is a tap, there is no drag-select or precise pathing to miss on a phone.
@@ -46,15 +47,11 @@
   const BASE_ARRIVE = 0.93;
   const REGROW_TIME = 6; // seconds for the tiberium patch to fill back in
 
-  // The harvester is now a target, not scenery: a lane left undefended can
-  // cost you your economy, the way raiding a harvester does in real C&C.
+  // Both harvesters are targets, not scenery: a lane-1 push that reaches one
+  // cuts that side's income until it rebuilds — the raid that gives the
+  // economy real stakes, now symmetric for player and enemy.
   const HARVESTER_MAX_HP = 140;
   const HARVESTER_REBUILD_TIME = 9;
-
-  // The mirror of that threat: push a unit deep into their territory
-  // uncontested and their production slows, the way disrupting a harvester's
-  // route would. Lighter than a second animated harvester, same tension.
-  const FRONT_INCOME_MULT = 0.5;
 
   // A triangle, verified against the headless sim in scratch:
   //   tank shreds rifle · rocket shreds tank · rifle out-economies rocket
@@ -74,8 +71,6 @@
   // Tank is gated behind a one-time structure, same as real C&C's War Factory —
   // the match now has an opening (infantry only), a tech decision, and an
   // armoured lategame, instead of every option being open from second one.
-  // It's its own row below the build grid rather than sharing the tank slot,
-  // so the grid never shows two different meanings on one button.
   const WAR_FACTORY = { label: "War Factory", cost: 600, build: 8, from: "veh" };
 
   // A second tech path, parallel to the War Factory: build the structure once,
@@ -96,6 +91,13 @@
   // fires at whichever lane is carrying the most of your army.
   const SUPER_CHARGE_TIME = 45;
   const STRIKE_DAMAGE = 200;
+
+  // The enemy's income comes from its harvester's deposits, split across its
+  // two build lines. Same average as the old continuous formula, so the tuned
+  // economy arc (starts below the player, ramps past) is preserved — verified
+  // in the headless sim.
+  const FOE_INF_SHARE = 0.55;
+  const FOE_VEH_SHARE = 0.45;
 
   const FOE_COLOR = "#e8624f";
 
@@ -131,11 +133,9 @@
 
   function resize() {
     const cssW = canvas.parentElement.clientWidth;
-    // 0.40 on desktop; a narrow viewport now has to fit two more rows below
-    // the grid (War Factory, Tech Center) than it did originally, so the
-    // canvas gives up more of its share there — measured via a same-origin
-    // iframe probe at 390x844 and 360x740, since the fraction below was
-    // overflowing by 24-86px before this was added.
+    // 0.40 on desktop; a narrow viewport has to fit two structure rows below
+    // the grid, so the canvas gives up more of its share there — measured via
+    // a same-origin iframe probe at 390x844 and 360x740.
     const compact = window.innerWidth <= 640;
     const ratio = compact ? 0.30 : 0.4;
     const minH = compact ? 170 : 240;
@@ -156,7 +156,30 @@
   const TOP = 34;
   const BOT = () => H - 34;
 
+  // Each side's harvester shuttles between its own base and its own field, both
+  // in the centre lane but on that side's half, far enough apart to never
+  // overlap (player stays below 0.62H, foe stays above 0.38H).
+  const harvBaseY = (side) => (side === "you" ? H - TOP - 12 : TOP + 12);
+  const harvFieldY = (side) => Math.round(side === "you" ? H * 0.62 : H * 0.38);
+
+  function harvOf(side) {
+    return side === "you" ? state.harvester : state.foeHarvester;
+  }
+  function harvYOf(side) {
+    const out = harvestPosition(harvOf(side).t / HARVEST_CYCLE);
+    const base = harvBaseY(side), field = harvFieldY(side);
+    return base + (field - base) * out;
+  }
+
   // ---------- state ----------
+
+  function newHarvester() {
+    return {
+      t: 0, lastHarvestT: -999,
+      hp: HARVESTER_MAX_HP, max: HARVESTER_MAX_HP,
+      destroyed: false, rebuildAt: 0, warned: false,
+    };
+  }
 
   function newState() {
     return {
@@ -172,21 +195,18 @@
       units: [],
       fx: [],
       yard: { you: YARD_HP, foe: YARD_HP },
-      harvester: {
-        t: 0, lastHarvestT: -999,
-        hp: HARVESTER_MAX_HP, max: HARVESTER_MAX_HP,
-        destroyed: false, rebuildAt: 0, warned: false,
-      },
+      harvester: newHarvester(),
+      foeHarvester: newHarvester(),
       foe: {
         credits: { inf: 150, veh: 100 },
         warFactory: false, techCenter: false, infUpgrade: false,
         build: { inf: null, veh: null },
         superCharge: 0,
+        accrued: 0, // income banked since the last visible deposit float
       },
       elapsed: 0,
       shake: 0,
       superCharge: 0,
-      frontPressure: false,
       warned50: false,
       warned25: false,
       over: null,
@@ -215,29 +235,8 @@
     return false;
   }
 
-  function harvesterY() {
-    const out = harvestPosition(state.harvester.t / HARVEST_CYCLE);
-    const base = H - TOP - 12;
-    return base - out * (H - TOP * 2 - 44);
-  }
-
   function addShake(m) {
     state.shake = Math.min(9, state.shake + m);
-  }
-
-  // A unit sitting deep in enemy territory in the shared lane, uncontested,
-  // is treated as disrupting their production — the mirror of the harvester
-  // being raidable, without needing a second animated harvester to collide with.
-  function isFrontPressured() {
-    for (const u of state.units) {
-      if (u.side !== "you" || u.lane !== 1 || u.hp <= 0) continue;
-      if (u.y > TOP + 70) continue;
-      const contested = state.units.some(
-        (o) => o.side === "foe" && o.lane === 1 && o.hp > 0 && Math.abs(o.y - u.y) < 60
-      );
-      if (!contested) return true;
-    }
-    return false;
   }
 
   // ---------- building ----------
@@ -310,6 +309,13 @@
       y: side === "you" ? BOT() - 14 : TOP + 14,
       hp, max: hp, cd: 0, flash: 0, walk: Math.random() * 6,
       dmgMul: upgraded ? INF_DMG_MUL : 1,
+      // Two cheap sources of spread so a burst of same-type units reads as a
+      // squad instead of one sprite: a fixed sideways offset (fraction of lane
+      // width), and a small speed jitter so a column also fans out along the
+      // lane over time. Neither throttles the yard rush the way a hard spacing
+      // rule did — every unit still reaches and hits the yard.
+      xOff: (Math.random() * 2 - 1) * 0.13,
+      spd: 1 + (Math.random() * 2 - 1) * 0.12,
     });
   }
 
@@ -318,42 +324,47 @@
 
   // ---------- simulation ----------
 
+  // Advances a harvester's shuttle cycle and calls back on the two events that
+  // matter: reaching the field (deplete/regrow) and returning to base (pay).
+  function stepHarvester(hv, dt, onField, onDeposit) {
+    if (hv.destroyed) {
+      if (state.elapsed >= hv.rebuildAt) {
+        hv.destroyed = false;
+        hv.hp = HARVESTER_MAX_HP;
+        hv.warned = false;
+        hv.t = 0;
+      }
+      return;
+    }
+    const prev = hv.t / HARVEST_CYCLE;
+    hv.t += dt;
+    const cur = hv.t / HARVEST_CYCLE;
+    if (prev < FIELD_ENTER && cur >= FIELD_ENTER) { hv.lastHarvestT = state.elapsed; onField && onField(); }
+    if (prev < BASE_ARRIVE && cur >= BASE_ARRIVE) onDeposit && onDeposit();
+    if (hv.t >= HARVEST_CYCLE) hv.t -= HARVEST_CYCLE;
+  }
+
   function update(dt) {
     if (state.over) return;
     state.elapsed += dt;
     state.shake = Math.max(0, state.shake - dt * 14);
     state.superCharge = Math.min(1, state.superCharge + dt / SUPER_CHARGE_TIME);
 
-    const h = state.harvester;
-    if (h.destroyed) {
-      if (state.elapsed >= h.rebuildAt) {
-        h.destroyed = false;
-        h.hp = HARVESTER_MAX_HP;
-        h.warned = false;
-        h.t = 0;
-        say("Harvester back online.");
-      }
-    } else {
-      const prevHarvestP = h.t / HARVEST_CYCLE;
-      h.t += dt;
-      const harvestP = h.t / HARVEST_CYCLE;
+    stepHarvester(state.harvester, dt, null, () => {
+      const amount = Math.round(HARVEST_AMOUNT * incomeMul());
+      state.credits += amount;
+      float(laneX(1), harvBaseY("you") - 10, "+" + amount, palette.accent);
+      puff(laneX(1), harvBaseY("you") - 10, palette.accent);
+    });
 
-      // The field taps out the instant loading starts, not on arrival — it
-      // should already look picked-over while the harvester is still parked.
-      if (prevHarvestP < FIELD_ENTER && harvestP >= FIELD_ENTER) {
-        h.lastHarvestT = state.elapsed;
-      }
-      // Paid the moment it's back, not after an extra idle beat at the yard.
-      // With any gap, arriving and getting paid read as two unrelated events
-      // instead of one causing the other.
-      if (prevHarvestP < BASE_ARRIVE && harvestP >= BASE_ARRIVE) {
-        const amount = Math.round(HARVEST_AMOUNT * incomeMul());
-        state.credits += amount;
-        float(laneX(1), BOT() - 22, "+" + amount, palette.accent);
-        puff(laneX(1), BOT() - 22, palette.accent);
-      }
-      if (h.t >= HARVEST_CYCLE) h.t -= HARVEST_CYCLE;
-    }
+    stepHarvester(state.foeHarvester, dt, null, () => {
+      // Income actually accrues continuously in foeThink (the tuned economy
+      // arc); this just surfaces the amount banked over the cycle as a deposit
+      // float, so the enemy's harvester visibly pays them the way yours does.
+      const acc = Math.round(state.foe.accrued);
+      if (acc > 0) float(laneX(1) + 16, harvBaseY("foe") + 10, "+" + acc, FOE_COLOR);
+      state.foe.accrued = 0;
+    });
 
     for (const line of ["inf", "veh"]) {
       const q = state.queues[line];
@@ -380,42 +391,28 @@
       }
     }
 
-    const pressured = isFrontPressured();
-    if (pressured && !state.frontPressure) say("Enemy supply lines under pressure!");
-    state.frontPressure = pressured;
-
-    foeThink(dt, pressured);
-    foeStrikeCheck(dt);
+    foeThink(dt);
+    foeStrikeCheck();
     stepUnits(dt);
     stepFx(dt);
     checkYardWarnings();
     checkOver();
   }
 
-  // How much of the foe's income each line gets. Verified against the sim:
-  // giving veh a guaranteed 45% gets a War Factory built by roughly the
-  // 90-110s mark once armor unlocks at t=35, without starving infantry. Before
-  // t=35 the veh line has nothing to spend on yet, so only a small trickle
-  // goes there pre-unlock — a full 45% split from t=0 was tried first and
-  // over-banked, which slowed infantry's own pace enough that an idle
-  // opponent's survival time stretched from ~60s to ~80s in the sim.
-  const FOE_INF_SHARE = 0.55;
-  const FOE_VEH_SHARE = 0.45;
-
-  function foeThink(dt, pressured) {
+  function foeThink(dt) {
     const f = state.foe;
-    // Starts below the player's ~33/s so the opening is survivable, then
-    // overtakes it, so sitting on a lead loses. Halved while their forward
-    // lane is uncontested — the cost of letting a raider sit there.
-    const rate = (22 + Math.min(34, state.elapsed * 0.22)) * (pressured ? FRONT_INCOME_MULT : 1);
-    if (state.elapsed < 35) {
-      f.credits.inf += dt * rate * 0.85;
-      f.credits.veh += dt * rate * 0.15;
-    } else {
-      f.credits.inf += dt * rate * FOE_INF_SHARE;
-      f.credits.veh += dt * rate * FOE_VEH_SHARE;
-    }
     f.superCharge = Math.min(1, f.superCharge + dt / SUPER_CHARGE_TIME);
+
+    // Income accrues continuously — the same tuned formula the enemy has
+    // always used — but only while its harvester lives. Raid it and this
+    // stops, the exact mirror of losing your own harvester. `accrued` is
+    // banked for the deposit float shown when the harvester next reaches base.
+    if (!state.foeHarvester.destroyed) {
+      const rate = 22 + Math.min(34, state.elapsed * 0.22);
+      f.credits.inf += dt * rate * (state.elapsed < 35 ? 0.85 : FOE_INF_SHARE);
+      f.credits.veh += dt * rate * (state.elapsed < 35 ? 0.15 : FOE_VEH_SHARE);
+      f.accrued += dt * rate;
+    }
 
     for (const line of ["inf", "veh"]) {
       const job = f.build[line];
@@ -499,39 +496,47 @@
       u.cd = Math.max(0, u.cd - dt);
       u.flash = Math.max(0, u.flash - dt);
 
-      let target = null, best = Infinity, targetIsHarvester = false;
+      let target = null, best = Infinity;
       for (const o of state.units) {
         if (o.hp <= 0 || o.side === u.side || o.lane !== u.lane) continue;
         const gap = Math.abs(o.y - u.y);
-        if (gap < best) { best = gap; target = o; targetIsHarvester = false; }
-      }
-      // An undefended lane 1 leaves the harvester itself in range — the raid
-      // threat that gives the economy real stakes.
-      if (u.side === "foe" && u.lane === 1 && !state.harvester.destroyed) {
-        const gap = Math.abs(harvesterY() - u.y);
-        if (gap < best) { best = gap; targetIsHarvester = true; }
+        if (gap < best) { best = gap; target = o; }
       }
 
-      if ((target || targetIsHarvester) && best <= d.range) {
+      // The enemy's harvester sits in lane 1 between the front and their yard,
+      // so a lane-1 push can raid it before reaching the base. Each side can
+      // only raid the *other's* harvester.
+      let harvTarget = null, harvSide = null;
+      if (u.lane === 1) {
+        const ehSide = u.side === "you" ? "foe" : "you";
+        const eh = harvOf(ehSide);
+        if (!eh.destroyed) {
+          const gap = Math.abs(harvYOf(ehSide) - u.y);
+          if (gap < best) { best = gap; target = null; harvTarget = eh; harvSide = ehSide; }
+        }
+      }
+
+      if ((target || harvTarget) && best <= d.range) {
         if (u.cd === 0) {
           u.cd = d.rof;
           u.flash = 0.1;
           const dmg = d.dmg * (u.dmgMul || 1);
 
-          if (targetIsHarvester) {
-            const hv = state.harvester;
-            hv.hp -= dmg;
-            puff(laneX(1), harvesterY(), FOE_COLOR, 0.9);
-            if (hv.hp <= 0) {
-              hv.hp = 0;
-              hv.destroyed = true;
-              hv.rebuildAt = state.elapsed + HARVESTER_REBUILD_TIME;
-              puff(laneX(1), harvesterY(), FOE_COLOR, 2.2);
+          if (harvTarget) {
+            const hx = laneX(1), hy = harvYOf(harvSide);
+            const hitColor = u.side === "you" ? palette.accent : FOE_COLOR;
+            harvTarget.hp -= dmg;
+            puff(hx, hy, hitColor, 0.9);
+            if (harvTarget.hp <= 0) {
+              harvTarget.hp = 0;
+              harvTarget.destroyed = true;
+              harvTarget.rebuildAt = state.elapsed + HARVESTER_REBUILD_TIME;
+              puff(hx, hy, hitColor, 2.2);
               addShake(4);
-              say("Harvester destroyed! Rebuilding...");
-            } else if (!hv.warned && hv.hp <= HARVESTER_MAX_HP * 0.5) {
-              hv.warned = true;
-              say("Harvester under attack!");
+              say(u.side === "you" ? "Enemy harvester destroyed!" : "Harvester destroyed! Rebuilding...");
+            } else if (!harvTarget.warned && harvTarget.hp <= HARVESTER_MAX_HP * 0.5) {
+              harvTarget.warned = true;
+              if (u.side === "foe") say("Harvester under attack!");
             }
           } else {
             const bonus = d.strongVs && UNITS[target.key].kind === d.strongVs ? COUNTER_BONUS : 1;
@@ -546,8 +551,6 @@
                 state.credits += reward;
                 float(laneX(target.lane), target.y, "+" + reward, palette.accent);
               } else {
-                // Split the same way ongoing income is, so a kill can't
-                // accidentally fast-track the vehicle line past its share.
                 state.foe.credits.inf += reward * FOE_INF_SHARE;
                 state.foe.credits.veh += reward * FOE_VEH_SHARE;
               }
@@ -562,7 +565,7 @@
       const arrived = u.side === "you" ? u.y <= goal : u.y >= goal;
 
       if (!arrived) {
-        u.y += dir * d.speed * dt;
+        u.y += dir * d.speed * u.spd * dt;
         u.walk += dt * 9;
       } else if (u.cd === 0) {
         state.yard[u.side === "you" ? "foe" : "you"] -= d.dmg * (u.dmgMul || 1);
@@ -641,14 +644,6 @@
       ctx.fillRect(i * laneW, 0, laneW - 1, H);
     }
 
-    ctx.fillStyle = withAlpha(palette.accent, 0.22);
-    for (let i = 0; i < LANES; i++) {
-      for (let k = 0; k < 5; k++) {
-        const y = H * 0.3 + k * (H * 0.1);
-        ctx.fillRect(laneX(i) - 9 + ((k % 2) * 6), y, 12, 3);
-      }
-    }
-
     drawYard(0, FOE_COLOR, state.yard.foe);
     drawYard(H - TOP, palette.accent, state.yard.you);
 
@@ -663,8 +658,10 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    drawTiberiumField();
-    drawHarvester();
+    drawTiberiumField("you");
+    drawTiberiumField("foe");
+    drawHarvester("you");
+    drawHarvester("foe");
     for (const u of state.units) drawUnit(u);
     drawFx();
 
@@ -702,14 +699,16 @@
 
   // A visible resource, not just an invisible timer. Shrinks to a third size
   // the moment loading starts and regrows over the following seconds, so
-  // there's something on the field that visibly explains the credits.
-  function drawTiberiumField() {
-    const since = state.elapsed - state.harvester.lastHarvestT;
+  // there's something on each field that visibly explains the credits.
+  function drawTiberiumField(side) {
+    const hv = harvOf(side);
+    const color = side === "you" ? palette.accent : FOE_COLOR;
+    const since = state.elapsed - hv.lastHarvestT;
     const regrow = Math.min(1, Math.max(0, since / REGROW_TIME));
     const scale = 0.4 + 0.6 * regrow;
-    const x = laneX(1), y = TOP + 30;
+    const x = laneX(1), y = harvFieldY(side);
 
-    ctx.fillStyle = withAlpha(palette.accent, 0.3 + 0.55 * regrow);
+    ctx.fillStyle = withAlpha(color, 0.28 + 0.5 * regrow);
     for (const [dx, dy] of [[0, -1], [0.8, 0.45], [-0.8, 0.45]]) {
       const sx = x + dx * 10 * scale, sy = y + dy * 8 * scale;
       ctx.beginPath();
@@ -722,15 +721,16 @@
     }
   }
 
-  function drawHarvester() {
-    const hv = state.harvester;
+  function drawHarvester(side) {
+    const hv = harvOf(side);
+    const color = side === "you" ? palette.accent : FOE_COLOR;
     const x = laneX(1);
-    const y = harvesterY();
+    const y = harvYOf(side);
 
     if (hv.destroyed) {
       ctx.fillStyle = withAlpha(palette.muted, 0.55);
       ctx.fillRect(x - 8, y - 6, 16, 12);
-      ctx.strokeStyle = withAlpha(FOE_COLOR, 0.75);
+      ctx.strokeStyle = withAlpha(color, 0.75);
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(x - 7, y - 5); ctx.lineTo(x + 7, y + 5);
@@ -741,22 +741,22 @@
 
     const cargo = harvestCargo(hv.t / HARVEST_CYCLE);
 
-    ctx.fillStyle = withAlpha(palette.accent, 0.35);
+    ctx.fillStyle = withAlpha(color, 0.35);
     ctx.fillRect(x - 8, y - 7, 16, 14);
-    ctx.fillStyle = palette.accent;
+    ctx.fillStyle = color;
     ctx.fillRect(x - 8, y - 7, 16, 3);
     ctx.fillRect(x - 8, y + 4, 16, 3);
 
     if (cargo > 0) {
       // Fills bottom-up, like a hopper loading rather than a light switching on.
-      const h = 6 * cargo;
-      ctx.fillRect(x - 4, y + 3 - h, 8, h);
+      const hh = 6 * cargo;
+      ctx.fillRect(x - 4, y + 3 - hh, 8, hh);
     }
 
     if (hv.hp < hv.max) {
       ctx.fillStyle = withAlpha(palette.muted, 0.45);
       ctx.fillRect(x - 9, y + 10, 18, 2);
-      ctx.fillStyle = palette.accent;
+      ctx.fillStyle = color;
       ctx.fillRect(x - 9, y + 10, 18 * (hv.hp / hv.max), 2);
     }
   }
@@ -766,7 +766,7 @@
   // footprint.
   function drawUnit(u) {
     const d = UNITS[u.key];
-    const x = laneX(u.lane) + (u.side === "you" ? -9 : 9);
+    const x = laneX(u.lane) + (u.side === "you" ? -9 : 9) + u.xOff * laneW;
     const color = u.side === "you" ? palette.accent : FOE_COLOR;
     const fwd = u.side === "you" ? -1 : 1;
     const bob = Math.sin(u.walk) * 0.8;
@@ -872,8 +872,7 @@
     strikeEl.classList.toggle("is-ready", !state.over && state.superCharge >= 1);
     strikeFillEl.style.width = Math.min(1, state.superCharge) * 100 + "%";
 
-    // War Factory row: its own line below the grid, hidden once built —
-    // nothing more to do there once the tank slot is unlocked.
+    // War Factory row: its own line below the grid, hidden once built.
     warFactoryEl.hidden = state.warFactory;
     if (!state.warFactory) {
       warFactoryEl.disabled = Boolean(state.over) || isCapped("warfactory") || state.credits < WAR_FACTORY.cost;
@@ -882,8 +881,8 @@
         head && head.key === "warfactory" ? (1 - head.left / head.total) * 100 + "%" : "0%";
     }
 
-    // Tech row swaps label the same way the tank slot used to: Tech Center
-    // until built, then Upgrade Infantry, then hidden once bought.
+    // Tech row swaps label: Tech Center until built, then Upgrade Infantry,
+    // then hidden once bought.
     techRowEl.hidden = state.infUpgrade;
     if (!state.infUpgrade) {
       const key = state.techCenter ? "infupgrade" : "techcenter";
