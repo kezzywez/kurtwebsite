@@ -1684,3 +1684,197 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 @media (prefers-reduced-motion: reduce) {
   .rts-strike.is-ready { animation: none; }
 }
+
+/* ---------- Recipes ---------- */
+
+.recipe-title {
+  font-size: 2.1rem;
+  line-height: 1.15;
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+
+.recipe-byline {
+  color: var(--text-muted);
+  max-width: 62ch;
+  margin: 0 0 22px;
+}
+
+.recipe-meta {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  margin: 0 0 28px;
+}
+
+.recipe-meta li {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  min-width: 96px;
+}
+
+.recipe-meta span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.recipe-meta strong { font-size: 0.95rem; }
+
+.recipe-figure { margin: 0 0 30px; }
+
+.recipe-figure img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: block;
+}
+
+/* Lead photo is portrait; cap it so the recipe stays high on the page. */
+.recipe-figure-lead img {
+  max-height: 380px;
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+.recipe-figure figcaption {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* The recipe card — deliberately high-contrast so it reads as the main event */
+.recipe-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 26px 28px 22px;
+  margin: 0 0 26px;
+  box-shadow: var(--shadow);
+}
+
+.recipe-card h2 {
+  margin: 0 0 20px;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+
+.recipe-card h3 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  margin: 26px 0 12px;
+}
+
+.recipe-card h3:first-of-type { margin-top: 0; }
+.recipe-card h3 em { text-transform: none; letter-spacing: 0; color: var(--text-muted); font-weight: 400; }
+
+.ingredients { list-style: none; padding: 0; margin: 0; }
+
+.ingredients li {
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.ingredients li:last-child { border-bottom: none; }
+.ingredients b { color: var(--text); }
+
+.ingredients .note {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  display: block;
+}
+
+.directions { margin: 0; padding-left: 22px; }
+.directions > li { padding: 7px 0; }
+.directions ul { margin: 8px 0 2px; padding-left: 18px; }
+.directions ul li { color: var(--text-muted); font-size: 0.92rem; }
+
+.recipe-card-foot {
+  margin: 24px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Callouts */
+/* Three distinct looks: neutral (context), accent (tip), amber (caution). */
+.callout {
+  background: var(--bg-elevated-2);
+  border-left: 3px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 22px 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.callout b { color: var(--text); }
+
+.callout-tip {
+  border-left-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.callout-warn {
+  border-left-color: #d98324;
+  background: rgba(217, 131, 36, 0.10);
+}
+
+.recipe-quote {
+  margin: 0;
+  padding: 0 0 0 20px;
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
+}
+
+.recipe-quote p:first-child { margin-top: 0; }
+.recipe-quote strong { color: var(--text); }
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-bottom: 8px;
+}
+
+.tool-col h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.tool-col ul { margin: 0; padding-left: 18px; }
+.tool-col li { padding: 5px 0; font-size: 0.95rem; }
+
+.recipe-outro { font-size: 1.05rem; }
+
+.recipe-credit-foot {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .recipe-title { font-size: 1.7rem; }
+  .recipe-card { padding: 20px 18px 18px; }
+  .tools-grid { grid-template-columns: 1fr; gap: 20px; }
+  .recipe-meta li { flex: 1 1 calc(50% - 10px); min-width: 0; }
+}
