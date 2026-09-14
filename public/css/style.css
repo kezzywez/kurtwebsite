@@ -186,6 +186,25 @@ nav.site-nav a.active {
   :root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: inline; }
 }
 
+/* On narrow screens the nav wraps below the brand, which used to push the
+   theme toggle onto a third row. Pin it beside the brand instead so the
+   header stays two rows. */
+@media (max-width: 680px) {
+  header.site-header .wrap { position: relative; }
+
+  nav.site-nav {
+    width: 100%;
+    margin-left: -12px; /* cancel the first link's padding so it lines up with the brand */
+  }
+
+  .theme-toggle {
+    position: absolute;
+    top: -3px;
+    right: 16px;
+    margin-left: 0;
+  }
+}
+
 /* ---------- Hero ---------- */
 
 main.wrap { padding-bottom: 160px; }
@@ -271,6 +290,11 @@ main.wrap { padding-bottom: 160px; }
 /* ---------- Sections ---------- */
 
 section { margin-top: 72px; scroll-margin-top: 84px; }
+
+/* 72px is spacing *between* sections. The first one sits right under the
+   header's own padding, so it would otherwise stack into a large gap.
+   (.hero does the same thing on the homepage.) */
+main.wrap > section:first-child { margin-top: 0; }
 
 .section-label {
   display: flex;
