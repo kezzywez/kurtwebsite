@@ -34,13 +34,15 @@ if (revealEls.length && "IntersectionObserver" in window) {
 }
 
 // Watching shelf. Data is generated at build time by scripts/fetch-movies.mjs;
-// when that file is absent the section simply stays hidden.
+// when that file is absent the section simply stays hidden. The nav link
+// lives on every page (not just the homepage it points to), so it's
+// revealed independently of whether this particular page has the shelf UI.
 const movieShelf = document.getElementById("movieShelf");
+const navWatching = document.getElementById("navWatching");
 
-if (movieShelf) {
+if (movieShelf || navWatching) {
   const section = document.getElementById("watching");
   const detail = document.getElementById("movieDetail");
-  const navWatching = document.getElementById("navWatching");
 
   const showDetail = (movie, button) => {
     const wasOpen = button.getAttribute("aria-expanded") === "true";
@@ -87,39 +89,42 @@ if (movieShelf) {
       const movies = (data.movies || []).filter((m) => m.poster);
       if (!movies.length) return;
 
-      movies.forEach((movie) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "shelf-item";
-        button.setAttribute("role", "listitem");
-        button.setAttribute("aria-expanded", "false");
-        button.setAttribute("aria-controls", "movieDetail");
-
-        const img = document.createElement("img");
-        img.src = movie.poster;
-        img.alt = `${movie.title} poster`;
-        img.loading = "lazy";
-        img.decoding = "async";
-        button.appendChild(img);
-
-        const title = document.createElement("span");
-        title.className = "shelf-title";
-        title.textContent = movie.title;
-        button.appendChild(title);
-
-        if (movie.year) {
-          const year = document.createElement("span");
-          year.className = "shelf-year";
-          year.textContent = movie.year;
-          button.appendChild(year);
-        }
-
-        button.addEventListener("click", () => showDetail(movie, button));
-        movieShelf.appendChild(button);
-      });
-
-      section.hidden = false;
       if (navWatching) navWatching.hidden = false;
+
+      if (movieShelf) {
+        movies.forEach((movie) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "shelf-item";
+          button.setAttribute("role", "listitem");
+          button.setAttribute("aria-expanded", "false");
+          button.setAttribute("aria-controls", "movieDetail");
+
+          const img = document.createElement("img");
+          img.src = movie.poster;
+          img.alt = `${movie.title} poster`;
+          img.loading = "lazy";
+          img.decoding = "async";
+          button.appendChild(img);
+
+          const title = document.createElement("span");
+          title.className = "shelf-title";
+          title.textContent = movie.title;
+          button.appendChild(title);
+
+          if (movie.year) {
+            const year = document.createElement("span");
+            year.className = "shelf-year";
+            year.textContent = movie.year;
+            button.appendChild(year);
+          }
+
+          button.addEventListener("click", () => showDetail(movie, button));
+          movieShelf.appendChild(button);
+        });
+
+        section.hidden = false;
+      }
     })
     .catch(() => {
       /* No data file — leave the section hidden. */
