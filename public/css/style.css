@@ -66,28 +66,23 @@
 
 html { scroll-behavior: smooth; }
 
+/* Ambient gradient wash, set directly on body's own background rather
+   than a `position: fixed` pseudo-element. A fixed element sized via
+   `inset: 0` fights iOS Safari's collapsing address bar and can leave
+   extra, non-bouncing scroll space at the bottom of the page. Plain
+   background scrolls with the document like everything else, which
+   sidesteps that whole bug class. */
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.65;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Ambient gradient wash. Fixed pseudo-element rather than
-   background-attachment: fixed, which is unreliable on iOS. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
   background:
     radial-gradient(900px 620px at 12% -8%, var(--grad-a), transparent 62%),
     radial-gradient(820px 600px at 92% 2%, var(--grad-b), transparent 62%),
     radial-gradient(760px 560px at 48% 106%, var(--grad-c), transparent 62%),
     var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
 }
 
 .wrap {
@@ -733,7 +728,6 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   }
 
   body { background: #fff; }
-  body::before { display: none; }
 
   header.site-header {
     position: static;
