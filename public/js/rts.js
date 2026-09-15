@@ -119,13 +119,21 @@
     hard:   { label: "Hard",   incBase: 31, incRamp: 0.30, incCap: 48, buildMul: 0.72, vehOpens: 24, techOpens: 38 },
   };
 
-  // Lane identity, so the three lanes aren't interchangeable. Each one favours
-  // a different part of the roster, which makes "which lane" a real decision
-  // rather than just "wherever the enemy isn't".
+  // Lane identity, so the three lanes aren't interchangeable. The two outer
+  // lanes each favour a different half of the roster; the middle lane's draw is
+  // the harvesters themselves.
+  //
+  // The middle lane deliberately has *no* combat modifier. It briefly paid
+  // double bounty, which was badly overpowered for two compounding reasons:
+  // it stacked an economy bonus onto the one lane that already lets you kill
+  // their income (so you gained and denied at once), and the payout fed back
+  // into more units and more kills. It also only looked symmetric — the enemy
+  // picks lanes with a bias but the player picks every time, so the player
+  // captured far more of a supposedly shared bonus.
   const TERRAIN = [
-    { key: "open",  label: "Open",     note: "vehicles roll faster",   vehSpeed: 1.35, infRange: 1,   bounty: 1 },
-    { key: "field", label: "Tiberium", note: "kills pay double",       vehSpeed: 1,    infRange: 1,   bounty: 2 },
-    { key: "ridge", label: "Ridge",    note: "infantry fire farther",  vehSpeed: 1,    infRange: 1.4, bounty: 1 },
+    { key: "open",  label: "Open",     note: "vehicles roll faster",       vehSpeed: 1.35, infRange: 1 },
+    { key: "field", label: "Tiberium", note: "harvesters run here",        vehSpeed: 1,    infRange: 1 },
+    { key: "ridge", label: "Ridge",    note: "infantry fire farther",      vehSpeed: 1,    infRange: 1.4 },
   ];
 
   const RECORD_KEY = "rts.record.v1";
@@ -295,7 +303,7 @@
   }
 
   // Terrain helpers. A unit's effective range and speed depend on the lane it
-  // is standing in, and kills there pay that lane's bounty rate.
+  // is standing in. Bounty is deliberately flat across lanes — see TERRAIN.
   const terrainOf = (lane) => TERRAIN[lane] || TERRAIN[0];
 
   function rangeOf(u, d) {
@@ -308,7 +316,7 @@
     return d.kind === "veh" ? d.speed * t.vehSpeed : d.speed;
   }
 
-  const bountyFor = (lane, cost) => Math.round(cost * BOUNTY * terrainOf(lane).bounty);
+  const bountyFor = (cost) => Math.round(cost * BOUNTY);
 
   // ---------- building ----------
 
@@ -528,9 +536,21 @@
       f.build[line] = {
         key: pick,
         left: defOf(pick).build * diffCfg().buildMul,
-        lane: Math.floor(Math.random() * LANES),
+        lane: foeLaneFor(pick),
       };
     }
+  }
+
+  // Terrain only stays fair if both sides can exploit it. The player picks a
+  // lane for every unit; before this the enemy rolled uniformly, so it captured
+  // roughly a third of the benefit the player did. It now leans toward the lane
+  // that suits what it just built — but only leans, because an enemy that always
+  // sends armour left would be trivially readable.
+  function foeLaneFor(key) {
+    const u = UNITS[key];
+    if (!u) return Math.floor(Math.random() * LANES); // structures never spawn
+    const suited = u.kind === "veh" ? 0 : 2;
+    return Math.random() < 0.6 ? suited : Math.floor(Math.random() * LANES);
   }
 
   // The enemy's mirror of the player's Air Strike button. It can't tap a
@@ -559,7 +579,7 @@
       const size = UNITS[u.key].kind === "veh" ? 1.8 : 1.3;
       puff(laneX(bestLane), u.y, FOE_COLOR, u.hp <= 0 ? size : 1.2);
       if (u.hp <= 0) {
-        const reward = bountyFor(bestLane, UNITS[u.key].cost);
+        const reward = bountyFor(UNITS[u.key].cost);
         f.credits.inf += reward * FOE_INF_SHARE;
         f.credits.veh += reward * FOE_VEH_SHARE;
       }
@@ -621,7 +641,7 @@
 
             if (target.hp <= 0) {
               const tk = UNITS[target.key];
-              const reward = bountyFor(target.lane, tk.cost);
+              const reward = bountyFor(tk.cost);
               const size = tk.kind === "veh" ? 1.8 : tk.kind === "at" ? 1.3 : 1;
               puff(laneX(target.lane), target.y, u.side === "you" ? palette.accent : FOE_COLOR, size);
               if (u.side === "you") {
@@ -714,7 +734,7 @@
       if (u.side !== "foe" || u.lane !== lane || u.hp <= 0) continue;
       u.hp -= STRIKE_DAMAGE;
       if (u.hp <= 0) {
-        const reward = bountyFor(lane, UNITS[u.key].cost);
+        const reward = bountyFor(UNITS[u.key].cost);
         state.credits += reward;
         puff(laneX(lane), u.y, palette.accent, UNITS[u.key].kind === "veh" ? 1.8 : 1.3);
         float(laneX(lane), u.y, "+" + reward, palette.accent);
