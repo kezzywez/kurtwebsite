@@ -11,7 +11,7 @@
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin — Kurt Zepeda</title>
+  <title>Admin · Kurt Zepeda</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/style.css">
@@ -172,7 +172,7 @@
     signOutBtn.addEventListener("click", () => signOut(auth));
 
     getRedirectResult(auth).catch(() => {
-      signInStatus.textContent = "Sign-in failed — try again.";
+      signInStatus.textContent = "Sign-in failed. Try again.";
       signInStatus.classList.add("is-error");
     });
 

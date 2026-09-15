@@ -683,7 +683,7 @@
   function checkYardWarnings() {
     if (!state.warned50 && state.yard.you <= YARD_HP * 0.5) {
       state.warned50 = true;
-      say("Base under attack — yard at half strength!");
+      say("Base under attack: yard at half strength!");
     }
     if (!state.warned25 && state.yard.you <= YARD_HP * 0.25) {
       state.warned25 = true;
@@ -710,7 +710,7 @@
 
   function renderRecord() {
     const r = record[difficulty];
-    recordEl.textContent = `${diffCfg().label} — ${r.w}W ${r.l}L`;
+    recordEl.textContent = `${diffCfg().label} · ${r.w}W ${r.l}L`;
   }
 
   function renderDiff() {
@@ -1069,7 +1069,7 @@
 
   function describeLane() {
     const t = terrainOf(state.lane);
-    hintEl.textContent = `Lane ${state.lane + 1} · ${t.label} — ${t.note}.`;
+    hintEl.textContent = `Lane ${state.lane + 1} · ${t.label}: ${t.note}.`;
   }
 
   canvas.addEventListener("click", (e) => {
@@ -1088,7 +1088,7 @@
     renderRecord();
     // Switching mid-match would make the record meaningless, so start fresh.
     reset();
-    say(`${diffCfg().label} — new match.`);
+    say(`${diffCfg().label}: new match.`);
   });
 
   strikeEl.addEventListener("click", fireStrike);

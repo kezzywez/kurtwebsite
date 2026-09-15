@@ -142,7 +142,7 @@
 
   function timeUp() {
     revealCorrect();
-    endRound(`Time. It was ${answer.title} (${answer.year}) — no points.`);
+    endRound(`Time. It was ${answer.title} (${answer.year}). No points.`);
   }
 
   function guess(film, btn) {
@@ -154,8 +154,8 @@
       btn.classList.add("is-correct");
       endRound(
         speed
-          ? `${answer.title} (${answer.year}) — ${base} + ${speed} speed.`
-          : `${answer.title} (${answer.year}) — ${base} points.`
+          ? `${answer.title} (${answer.year}): ${base} + ${speed} speed.`
+          : `${answer.title} (${answer.year}): ${base} points.`
       );
       return;
     }
@@ -166,12 +166,12 @@
 
     if (wrong >= MAX_GUESSES) {
       revealCorrect();
-      endRound(`Out of guesses — it was ${answer.title} (${answer.year}).`);
+      endRound(`Out of guesses. It was ${answer.title} (${answer.year}).`);
       return;
     }
 
     posterEl.style.filter = blurFor(wrong);
-    statusEl.textContent = "Not that one — here's a clearer look.";
+    statusEl.textContent = "Not that one. Here's a clearer look.";
   }
 
   function startRound() {
@@ -316,6 +316,6 @@
       start();
     })
     .catch(() => {
-      loadingEl.textContent = "The game isn't available right now — check back later.";
+      loadingEl.textContent = "The game isn't available right now. Check back later.";
     });
 })();
