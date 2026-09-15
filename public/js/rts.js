@@ -26,6 +26,7 @@
   const youFill = document.getElementById("youYardFill");
   const strikeEl = document.getElementById("rtsStrike");
   const strikeFillEl = document.getElementById("rtsStrikeFill");
+  const refineryEl = document.getElementById("rtsRefinery");
   const warFactoryEl = document.getElementById("rtsWarFactory");
   const techRowEl = document.getElementById("rtsTechRow");
 
@@ -241,7 +242,7 @@
 
   // ---------- building ----------
 
-  const BUTTONS = ["rifle", "rocket", "tank", "refinery"];
+  const BUTTONS = ["rifle", "rocket", "tank"];
 
   function renderButtons() {
     buildEl.replaceChildren();
@@ -872,6 +873,19 @@
     strikeEl.classList.toggle("is-ready", !state.over && state.superCharge >= 1);
     strikeFillEl.style.width = Math.min(1, state.superCharge) * 100 + "%";
 
+    // Refinery row: repeatable up to MAX_REFINERIES (unlike the one-time
+    // structures below), so the label grows a count once you've built one.
+    const refCapped = isCapped("refinery");
+    refineryEl.hidden = refCapped;
+    if (!refCapped) {
+      refineryEl.disabled = Boolean(state.over) || state.credits < REFINERY.cost;
+      refineryEl.querySelector(".rts-structure-name").textContent =
+        state.refineries > 0 ? `Refinery (${state.refineries}/${MAX_REFINERIES})` : "Refinery";
+      const head = state.queues.veh[0];
+      refineryEl.querySelector(".rts-btn-prog").style.width =
+        head && head.key === "refinery" ? (1 - head.left / head.total) * 100 + "%" : "0%";
+    }
+
     // War Factory row: its own line below the grid, hidden once built.
     warFactoryEl.hidden = state.warFactory;
     if (!state.warFactory) {
@@ -938,6 +952,7 @@
   });
 
   strikeEl.addEventListener("click", fireStrike);
+  refineryEl.addEventListener("click", () => queueItem("refinery", refineryEl));
   warFactoryEl.addEventListener("click", () => queueItem("warfactory", warFactoryEl));
   techRowEl.addEventListener("click", () => {
     queueItem(state.techCenter ? "infupgrade" : "techcenter", techRowEl);
