@@ -1,6 +1,25 @@
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+// Async content (the Watching shelf, below) can grow the page after the
+// browser has already jumped to a #hash target on load, leaving a visitor who
+// followed a link like /#games scrolled to the wrong spot once it lands above
+// their target. Correct for it once content settles — but only if nothing the
+// visitor did suggests they've since scrolled on purpose.
+let userScrolled = false;
+const markScrolled = () => { userScrolled = true; };
+window.addEventListener("wheel", markScrolled, { once: true, passive: true });
+window.addEventListener("touchmove", markScrolled, { once: true, passive: true });
+window.addEventListener("keydown", (e) => {
+  if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", " ", "Home", "End"].includes(e.key)) markScrolled();
+}, { once: true });
+
+function restoreHashScroll() {
+  if (userScrolled || !location.hash) return;
+  const target = document.getElementById(location.hash.slice(1));
+  if (target) target.scrollIntoView({ block: "start" });
+}
+
 const themeToggle = document.getElementById("themeToggle");
 if (themeToggle) {
   themeToggle.addEventListener("click", () => {
@@ -87,7 +106,7 @@ if (movieShelf || navWatching) {
     .then((res) => (res.ok ? res.json() : Promise.reject(new Error("no movie data"))))
     .then((data) => {
       const movies = (data.movies || []).filter((m) => m.poster);
-      if (!movies.length) return;
+      if (!movies.length) { restoreHashScroll(); return; }
 
       if (navWatching) navWatching.hidden = false;
 
@@ -125,11 +144,21 @@ if (movieShelf || navWatching) {
 
         section.hidden = false;
       }
+
+      restoreHashScroll();
     })
     .catch(() => {
       /* No data file — leave the section hidden. */
+      restoreHashScroll();
     });
 }
+
+// General safety net, independent of Watching entirely: the browser's native
+// #hash scroll on first load can silently no-op if it races the initial
+// layout/paint (observed even on a cold load with nothing async in play).
+// Re-running it once more after `load` is a harmless no-op when the native
+// jump already landed correctly.
+window.addEventListener("load", () => requestAnimationFrame(restoreHashScroll));
 
 const navLinks = document.querySelectorAll(".site-nav a[href^='/#']");
 const sections = Array.from(navLinks)
