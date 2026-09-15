@@ -1410,6 +1410,48 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   text-align: center;
 }
 
+/* Difficulty toggle + win/loss record, above the yard bars. */
+.rts-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.rts-diff {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rts-diff-btn {
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 14px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.rts-diff-btn:hover:not(.is-on) { color: var(--text); }
+
+.rts-diff-btn.is-on {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.rts-record {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
 .rts-build {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -29,6 +29,8 @@
   const refineryEl = document.getElementById("rtsRefinery");
   const warFactoryEl = document.getElementById("rtsWarFactory");
   const techRowEl = document.getElementById("rtsTechRow");
+  const diffEl = document.getElementById("rtsDiff");
+  const recordEl = document.getElementById("rtsRecord");
 
   // ---------- balance ----------
 
@@ -72,7 +74,14 @@
   // Tank is gated behind a one-time structure, same as real C&C's War Factory —
   // the match now has an opening (infantry only), a tech decision, and an
   // armoured lategame, instead of every option being open from second one.
-  const WAR_FACTORY = { label: "War Factory", cost: 600, build: 8, from: "veh" };
+  //
+  // Cost was 600, which the headless sweep showed made the whole armour path a
+  // trap: 600 + 650 is ~38s of saving for a *single* tank, and one tank loses
+  // to equal credits of either rifles or rockets. Armour only broke even near
+  // 1950c. At 425 the gate is a real decision rather than a tollbooth you
+  // regret paying. (The sweep also showed COUNTER_BONUS must stay at 3 —
+  // anything lower lets tanks beat rockets and collapses the triangle.)
+  const WAR_FACTORY = { label: "War Factory", cost: 425, build: 8, from: "veh" };
 
   // A second tech path, parallel to the War Factory: build the structure once,
   // then buy the upgrade it unlocks. This one raises the stats of every
@@ -101,6 +110,51 @@
   const FOE_VEH_SHARE = 0.45;
 
   const FOE_COLOR = "#e8624f";
+
+  // Two settings rather than a slider: the enemy's income curve and how fast it
+  // builds. Hard also lets it start teching sooner, so it isn't just "same plan,
+  // more money" — it reaches tanks while you're still on infantry.
+  const DIFFICULTY = {
+    normal: { label: "Normal", incBase: 22, incRamp: 0.22, incCap: 34, buildMul: 0.9,  vehOpens: 35, techOpens: 50 },
+    hard:   { label: "Hard",   incBase: 31, incRamp: 0.30, incCap: 48, buildMul: 0.72, vehOpens: 24, techOpens: 38 },
+  };
+
+  // Lane identity, so the three lanes aren't interchangeable. Each one favours
+  // a different part of the roster, which makes "which lane" a real decision
+  // rather than just "wherever the enemy isn't".
+  const TERRAIN = [
+    { key: "open",  label: "Open",     note: "vehicles roll faster",   vehSpeed: 1.35, infRange: 1,   bounty: 1 },
+    { key: "field", label: "Tiberium", note: "kills pay double",       vehSpeed: 1,    infRange: 1,   bounty: 2 },
+    { key: "ridge", label: "Ridge",    note: "infantry fire farther",  vehSpeed: 1,    infRange: 1.4, bounty: 1 },
+  ];
+
+  const RECORD_KEY = "rts.record.v1";
+  const DIFF_KEY = "rts.difficulty.v1";
+
+  function loadDifficulty() {
+    try {
+      const v = localStorage.getItem(DIFF_KEY);
+      if (v && DIFFICULTY[v]) return v;
+    } catch (e) {}
+    return "normal";
+  }
+
+  function loadRecord() {
+    const empty = { normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } };
+    try {
+      const raw = JSON.parse(localStorage.getItem(RECORD_KEY) || "null");
+      if (raw && raw.normal && raw.hard) return raw;
+    } catch (e) {}
+    return empty;
+  }
+
+  function saveRecord() {
+    try { localStorage.setItem(RECORD_KEY, JSON.stringify(record)); } catch (e) {}
+  }
+
+  let difficulty = loadDifficulty();
+  let record = loadRecord();
+  const diffCfg = () => DIFFICULTY[difficulty];
 
   let W = 0, H = 0, laneW = 0;
   let state = null;
@@ -239,6 +293,22 @@
   function addShake(m) {
     state.shake = Math.min(9, state.shake + m);
   }
+
+  // Terrain helpers. A unit's effective range and speed depend on the lane it
+  // is standing in, and kills there pay that lane's bounty rate.
+  const terrainOf = (lane) => TERRAIN[lane] || TERRAIN[0];
+
+  function rangeOf(u, d) {
+    const t = terrainOf(u.lane);
+    return d.kind === "veh" ? d.range : d.range * t.infRange;
+  }
+
+  function speedOf(u, d) {
+    const t = terrainOf(u.lane);
+    return d.kind === "veh" ? d.speed * t.vehSpeed : d.speed;
+  }
+
+  const bountyFor = (lane, cost) => Math.round(cost * BOUNTY * terrainOf(lane).bounty);
 
   // ---------- building ----------
 
@@ -409,7 +479,8 @@
     // stops, the exact mirror of losing your own harvester. `accrued` is
     // banked for the deposit float shown when the harvester next reaches base.
     if (!state.foeHarvester.destroyed) {
-      const rate = 22 + Math.min(34, state.elapsed * 0.22);
+      const cfg = diffCfg();
+      const rate = cfg.incBase + Math.min(cfg.incCap, state.elapsed * cfg.incRamp);
       f.credits.inf += dt * rate * (state.elapsed < 35 ? 0.85 : FOE_INF_SHARE);
       f.credits.veh += dt * rate * (state.elapsed < 35 ? 0.15 : FOE_VEH_SHARE);
       f.accrued += dt * rate;
@@ -430,16 +501,17 @@
       }
 
       const t = state.elapsed;
+      const cfg = diffCfg();
       let table;
       if (line === "veh") {
         const armor = f.warFactory ? "tank" : "warfactory";
-        table = t < 35 ? [] : t < 80 ? [["rifle", 4], ["rocket", 3], [armor, 3]]
-                                     : [["rifle", 2], ["rocket", 4], [armor, 4]];
+        table = t < cfg.vehOpens ? [] : t < 80 ? [["rifle", 4], ["rocket", 3], [armor, 3]]
+                                              : [["rifle", 2], ["rocket", 4], [armor, 4]];
       } else {
         // Infantry line mostly churns rifle/rocket; occasionally detours into
         // the tech path once there's enough of an economy to justify it.
         const tech = f.infUpgrade ? null : f.techCenter ? "infupgrade" : "techcenter";
-        table = t < 50 || !tech
+        table = t < cfg.techOpens || !tech
           ? [["rifle", 7], ["rocket", 3]]
           : [["rifle", 6], ["rocket", 3], [tech, 1.5]];
       }
@@ -453,7 +525,11 @@
       for (const [k, w] of pool) { r -= w; if (r <= 0) { pick = k; break; } }
 
       f.credits[line] -= defOf(pick).cost;
-      f.build[line] = { key: pick, left: defOf(pick).build * 0.9, lane: Math.floor(Math.random() * LANES) };
+      f.build[line] = {
+        key: pick,
+        left: defOf(pick).build * diffCfg().buildMul,
+        lane: Math.floor(Math.random() * LANES),
+      };
     }
   }
 
@@ -483,7 +559,7 @@
       const size = UNITS[u.key].kind === "veh" ? 1.8 : 1.3;
       puff(laneX(bestLane), u.y, FOE_COLOR, u.hp <= 0 ? size : 1.2);
       if (u.hp <= 0) {
-        const reward = Math.round(UNITS[u.key].cost * BOUNTY);
+        const reward = bountyFor(bestLane, UNITS[u.key].cost);
         f.credits.inf += reward * FOE_INF_SHARE;
         f.credits.veh += reward * FOE_VEH_SHARE;
       }
@@ -517,7 +593,7 @@
         }
       }
 
-      if ((target || harvTarget) && best <= d.range) {
+      if ((target || harvTarget) && best <= rangeOf(u, d)) {
         if (u.cd === 0) {
           u.cd = d.rof;
           u.flash = 0.1;
@@ -545,7 +621,7 @@
 
             if (target.hp <= 0) {
               const tk = UNITS[target.key];
-              const reward = Math.round(tk.cost * BOUNTY);
+              const reward = bountyFor(target.lane, tk.cost);
               const size = tk.kind === "veh" ? 1.8 : tk.kind === "at" ? 1.3 : 1;
               puff(laneX(target.lane), target.y, u.side === "you" ? palette.accent : FOE_COLOR, size);
               if (u.side === "you") {
@@ -566,7 +642,7 @@
       const arrived = u.side === "you" ? u.y <= goal : u.y >= goal;
 
       if (!arrived) {
-        u.y += dir * d.speed * u.spd * dt;
+        u.y += dir * speedOf(u, d) * u.spd * dt;
         u.walk += dt * 9;
       } else if (u.cd === 0) {
         state.yard[u.side === "you" ? "foe" : "you"] -= d.dmg * (u.dmgMul || 1);
@@ -596,15 +672,32 @@
   }
 
   function checkOver() {
-    if (state.yard.foe <= 0) finish("Enemy yard destroyed. You win.");
-    else if (state.yard.you <= 0) finish("Your yard is gone. You lose.");
+    if (state.yard.foe <= 0) finish("Enemy yard destroyed. You win.", "w");
+    else if (state.yard.you <= 0) finish("Your yard is gone. You lose.", "l");
   }
 
-  function finish(msg) {
+  function finish(msg, result) {
     state.over = msg;
+    if (result) {
+      record[difficulty][result] += 1;
+      saveRecord();
+      renderRecord();
+    }
     overTextEl.textContent = msg;
     overEl.hidden = false;
     say(msg);
+  }
+
+  function renderRecord() {
+    const r = record[difficulty];
+    recordEl.textContent = `${diffCfg().label} — ${r.w}W ${r.l}L`;
+  }
+
+  function renderDiff() {
+    [...diffEl.children].forEach((b) => {
+      b.classList.toggle("is-on", b.dataset.diff === difficulty);
+      b.setAttribute("aria-pressed", String(b.dataset.diff === difficulty));
+    });
   }
 
   // ---------- strike (player) ----------
@@ -621,7 +714,7 @@
       if (u.side !== "foe" || u.lane !== lane || u.hp <= 0) continue;
       u.hp -= STRIKE_DAMAGE;
       if (u.hp <= 0) {
-        const reward = Math.round(UNITS[u.key].cost * BOUNTY);
+        const reward = bountyFor(lane, UNITS[u.key].cost);
         state.credits += reward;
         puff(laneX(lane), u.y, palette.accent, UNITS[u.key].kind === "veh" ? 1.8 : 1.3);
         float(laneX(lane), u.y, "+" + reward, palette.accent);
@@ -658,6 +751,16 @@
     ctx.lineTo((state.lane + 1) * laneW - 1, H - TOP);
     ctx.stroke();
     ctx.setLineDash([]);
+
+    // Lane terrain names, just under the enemy yard. The selected lane's label
+    // is brighter so the readout below the field matches what's highlighted.
+    ctx.font = "600 9px ui-monospace, SFMono-Regular, Menlo, monospace";
+    ctx.textAlign = "center";
+    for (let i = 0; i < LANES; i++) {
+      ctx.fillStyle = withAlpha(palette.muted, i === state.lane ? 0.95 : 0.45);
+      ctx.fillText(TERRAIN[i].label.toUpperCase(), laneX(i), TOP + 12);
+    }
+    ctx.textAlign = "start";
 
     drawTiberiumField("you");
     drawTiberiumField("foe");
@@ -944,11 +1047,28 @@
 
   // ---------- input ----------
 
+  function describeLane() {
+    const t = terrainOf(state.lane);
+    hintEl.textContent = `Lane ${state.lane + 1} · ${t.label} — ${t.note}.`;
+  }
+
   canvas.addEventListener("click", (e) => {
     const r = canvas.getBoundingClientRect();
     const lane = Math.floor(((e.clientX - r.left) / r.width) * LANES);
     state.lane = Math.max(0, Math.min(LANES - 1, lane));
-    hintEl.textContent = `Lane ${state.lane + 1} selected.`;
+    describeLane();
+  });
+
+  diffEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-diff]");
+    if (!btn || btn.dataset.diff === difficulty) return;
+    difficulty = btn.dataset.diff;
+    try { localStorage.setItem(DIFF_KEY, difficulty); } catch (err) {}
+    renderDiff();
+    renderRecord();
+    // Switching mid-match would make the record meaningless, so start fresh.
+    reset();
+    say(`${diffCfg().label} — new match.`);
   });
 
   strikeEl.addEventListener("click", fireStrike);
@@ -967,13 +1087,21 @@
   function reset() {
     state = newState();
     overEl.hidden = true;
-    hintEl.textContent = "Tap a lane to send new units there.";
+    describeLane();
     statusEl.textContent = "";
   }
+
+  // Structure costs live in the constants above; stamp them into the static
+  // markup so the two can't drift apart (the War Factory label did exactly
+  // that once already).
+  refineryEl.querySelector(".rts-structure-cost").innerHTML = "&cent;" + REFINERY.cost;
+  warFactoryEl.querySelector(".rts-structure-cost").innerHTML = "&cent;" + WAR_FACTORY.cost;
 
   resize();
   reset();
   renderButtons();
+  renderDiff();
+  renderRecord();
   last = performance.now();
   requestAnimationFrame(frame);
 })();
