@@ -12,6 +12,10 @@
       "**/node_modules/**"
     ],
     "cleanUrls": true,
+    "redirects": [
+      { "source": "/rts", "destination": "/archiwar", "type": 301 },
+      { "source": "/rts/**", "destination": "/archiwar", "type": 301 }
+    ],
     "trailingSlash": false,
     "headers": [
       {

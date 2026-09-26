@@ -1938,3 +1938,39 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   .tools-grid { grid-template-columns: 1fr; gap: 20px; }
   .recipe-meta li { flex: 1 1 calc(50% - 10px); min-width: 0; }
 }
+
+/* Archiwar: the page for the desktop RTS, which replaced the browser skirmish. */
+.archiwar-page { padding-top: 56px; max-width: 820px; }
+
+.archiwar-lead {
+  color: var(--text-muted);
+  max-width: 62ch;
+  margin: 0 0 14px;
+}
+
+.archiwar-note {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  opacity: 0.85;
+  margin: 0 0 26px;
+}
+
+.archiwar-heading {
+  font-size: 1.05rem;
+  margin: 34px 0 12px;
+}
+
+.archiwar-list {
+  margin: 0 0 30px;
+  padding-left: 1.2rem;
+  color: var(--text-muted);
+  max-width: 64ch;
+}
+
+.archiwar-list li { margin-bottom: 10px; }
+.archiwar-list strong { color: var(--text); }
+
+@media (max-width: 640px) {
+  .archiwar-page { padding-top: 20px; }
+  .archiwar-lead, .archiwar-list { font-size: 0.94rem; }
+}
