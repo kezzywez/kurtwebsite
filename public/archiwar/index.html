@@ -43,7 +43,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://www.kurtzepeda.com/archiwar">
   <title>Archiwar · Kurt Zepeda</title>
-  <meta name="description" content="Archiwar: a real-time strategy game about island factions fighting over the last dry land on an ocean world. In development for Steam.">
+  <meta name="description" content="Archiwar is a real-time strategy game Kurt Zepeda is building for Steam, set on an ocean world where four factions fight over the last islands.">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -71,73 +71,90 @@
     <section>
       <h2 class="section-label">Archiwar</h2>
       <p class="archiwar-lead">
-        A real-time strategy game I'm building for Steam, in Godot. It's set on
-        Tidemark, an ocean world where under one percent of the surface is still
-        dry and the sea is rising. Island factions fight over every inch of what's left.
+        Archiwar is the real-time strategy game I've been building in Godot, and I'm
+        aiming to put it on Steam. It's set on Tidemark, a planet that's almost all
+        ocean. The water keeps rising, and the few islands left are what everyone is
+        fighting over.
       </p>
-      <p class="archiwar-note">It's a desktop game in progress, so there's nothing to play in the browser yet.</p>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/v2-base.jpg" alt="A Meridian Charter base on a sandy headland: a hangar, an airstrip, a fuel works, a gun emplacement and the hexagonal headquarters with its helipad" loading="eager">
-        <figcaption>A Meridian Charter base a few minutes in. The headquarters with the helipad is where everything else gets built from.</figcaption>
+        <figcaption>A Meridian Charter base a few minutes into a match.</figcaption>
       </figure>
 
       <h3 class="archiwar-heading">How it plays</h3>
-      <ul class="archiwar-list">
-        <li><strong>Land wins.</strong> Every building claims the ground around it. Hold 45% of the dry land for two and a half minutes and you win, even with their base still standing.</li>
-        <li><strong>Settlers.</strong> Neutral villages sit on the islands between the bases. Keep troops beside one long enough and it joins you, and pays you taxes.</li>
-        <li><strong>Two currencies.</strong> Alloy dug from mines buys machines. Cash from the land you hold pays your people.</li>
-        <li><strong>Crews.</strong> Vehicles need a driver. Kill the crew and the vehicle sits there empty, for anyone to climb into. Rush in with tanks and no infantry and you may be handing them over.</li>
-        <li><strong>Bridge or boat.</strong> Bridging a strait gets your army across, and closes the channel to your own ships.</li>
-      </ul>
+      <p>
+        Every building claims the ground around it. If you hold 45% of the dry land for
+        two and a half minutes you win, even if the other side's base is still standing,
+        so sitting back and defending isn't a safe plan.
+      </p>
+      <p>
+        There are two kinds of money. Alloy comes out of mines and pays for machines.
+        Cash comes from the land you hold and pays for people. Neutral villages sit on
+        the islands in between, and if you keep troops next to one long enough it
+        switches to your side and starts paying you too.
+      </p>
+      <p>
+        Vehicles need someone inside to drive them. If a tank's crew gets killed, the
+        tank just sits there until somebody climbs in, and that can be the other side.
+        Sending tanks forward without infantry nearby is a good way to lose them.
+      </p>
+      <p>
+        You can bridge a strait to walk your army across, but the bridge also blocks
+        your own ships from using that channel.
+      </p>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/v2-whale.jpg" alt="Red gunboats landing troops on a grassy shore next to an enemy base" loading="lazy">
-        <figcaption>Gunboats putting troops ashore under the palms, right next to the other side's base.</figcaption>
+        <figcaption>Gunboats landing troops next to an enemy base.</figcaption>
       </figure>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/v2-sea.jpg" alt="Two red gunboats attacking a white patrol boat at sea, with a second white boat marked NO CREW" loading="lazy">
-        <figcaption>Crews matter at sea too. The white boat at the bottom lost its crew and is drifting until someone boards it.</figcaption>
+        <figcaption>A fight at sea. The white boat at the bottom has lost its crew.</figcaption>
       </figure>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/kindled-fight.jpg" alt="Kindled flamethrowers and a flame tank burning through a squad of enemy infantry" loading="lazy">
-        <figcaption>The Kindled don't burn, so they fight up close and happily. Every flame shot leaves a small fire that burns everyone else.</figcaption>
+        <figcaption>Kindled flamethrowers. Their shots leave small fires on the ground that hurt everyone but them.</figcaption>
       </figure>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/empty-tank.jpg" alt="An enemy tank on fire, its crew killed, marked EMPTY - TAKE IT" loading="lazy">
-        <figcaption>A tank whose crew didn't make it. Whoever reaches it first keeps it.</figcaption>
+        <figcaption>An enemy tank after its crew was killed, up for grabs.</figcaption>
       </figure>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/settlement.jpg" alt="A settlers' hamlet of three stilt huts flying a blue flag" loading="lazy">
-        <figcaption>A settlement that has thrown in with you. Its flag changes color to match whoever holds it.</figcaption>
+        <figcaption>A village that has joined the blue side.</figcaption>
       </figure>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/land.jpg" alt="A battle on a sandy island, with each side's share of the land shown at the top and a minimap of the archipelago" loading="lazy">
-        <figcaption>The share of the land each side holds sits beside the money. The minimap shows who owns which ground.</figcaption>
+        <figcaption>The percentages at the top show how much of the land each side holds.</figcaption>
       </figure>
 
       <figure class="recipe-figure">
         <img src="/assets/archiwar/v2-grove.jpg" alt="A grove of palm trees catching fire next to a white harvester on the sand" loading="lazy">
-        <figcaption>Palm groves are lumber, and they burn. A grove that burns down leaves charred stumps behind.</figcaption>
+        <figcaption>Palm groves are where lumber comes from. They also catch fire.</figcaption>
       </figure>
 
       <h3 class="archiwar-heading">Factions</h3>
-      <p class="archiwar-lead">
-        There are four. The Meridian Charter is the standard army, with a lot of
-        paperwork. The Kindled burn the fight down up close, led by a commander who
-        talks like a pro wrestler. The Drift live on rafts and would rather sink your
-        boats than take your island. The Dike Guild pump the sea back and build new
-        land where there wasn't any. The campaign starts with the Charter, and the
-        other three open up as you play.
+      <p>
+        There are four factions. The Meridian Charter is a corporate army and plays
+        the most like a standard RTS side. The Kindled fight with fire at close range,
+        and their commander talks like a pro wrestler. The Drift live on rafts and are
+        strongest at sea. The Dike Guild pump out the sea to make new land, then dig in
+        on it.
+      </p>
+      <p>
+        Each faction unlocks its stronger units its own way. The Kindled build up fame,
+        the Drift build up devotion through their priests, the Guild count the land they
+        have made, and the Charter pays for it. The campaign starts with the Charter.
       </p>
       <figure class="recipe-figure">
         <img src="/assets/archiwar/factions.jpg" alt="The skirmish screen, choosing a faction for each side" loading="lazy">
-        <figcaption>Picking sides for a skirmish.</figcaption>
+        <figcaption>The skirmish setup screen.</figcaption>
       </figure>
     </section>
   </main>

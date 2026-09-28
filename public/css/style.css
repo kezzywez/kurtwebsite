@@ -1960,17 +1960,15 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   margin: 34px 0 12px;
 }
 
-.archiwar-list {
-  margin: 0 0 30px;
-  padding-left: 1.2rem;
+.archiwar-page section > p {
   color: var(--text-muted);
   max-width: 64ch;
+  margin: 0 0 14px;
 }
 
-.archiwar-list li { margin-bottom: 10px; }
-.archiwar-list strong { color: var(--text); }
+.archiwar-page section > p + figure { margin-top: 26px; }
 
 @media (max-width: 640px) {
   .archiwar-page { padding-top: 20px; }
-  .archiwar-lead, .archiwar-list { font-size: 0.94rem; }
+  .archiwar-page section > p { font-size: 0.94rem; }
 }
