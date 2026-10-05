@@ -1790,7 +1790,8 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
 .recipe-figure { margin: 0 0 30px; }
 
-.recipe-figure img {
+.recipe-figure img,
+.recipe-figure video {
   width: 100%;
   height: auto;
   border-radius: var(--radius);
