@@ -1973,3 +1973,213 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
   .archiwar-page { padding-top: 20px; }
   .archiwar-page section > p { font-size: 0.94rem; }
 }
+
+/* ==========================================================================
+   Gradient pass (2026-10-18). A brand gradient (green, blue, violet) used for
+   headlines, rules and card edges, and a stronger aurora behind the page.
+   Layered on top of the rules above so it can be read, and rolled back, as
+   one block.
+   ========================================================================== */
+:root {
+  --g1: #2dd7a6;
+  --g2: #3b82f6;
+  --g3: #a855f7;
+  --grad-brand: linear-gradient(115deg, var(--g1) 0%, var(--g2) 52%, var(--g3) 100%);
+  --grad-a: rgba(45, 215, 166, 0.20);
+  --grad-b: rgba(59, 130, 246, 0.18);
+  --grad-c: rgba(168, 85, 247, 0.14);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --g1: #0f8a68;
+    --g2: #2563eb;
+    --g3: #7c3aed;
+    --grad-a: rgba(15, 138, 104, 0.13);
+    --grad-b: rgba(37, 99, 235, 0.11);
+    --grad-c: rgba(124, 58, 237, 0.09);
+  }
+}
+:root[data-theme="light"] {
+  --g1: #0f8a68;
+  --g2: #2563eb;
+  --g3: #7c3aed;
+  --grad-a: rgba(15, 138, 104, 0.13);
+  --grad-b: rgba(37, 99, 235, 0.11);
+  --grad-c: rgba(124, 58, 237, 0.09);
+}
+:root[data-theme="dark"] {
+  --g1: #2dd7a6;
+  --g2: #3b82f6;
+  --g3: #a855f7;
+  --grad-a: rgba(45, 215, 166, 0.20);
+  --grad-b: rgba(59, 130, 246, 0.18);
+  --grad-c: rgba(168, 85, 247, 0.14);
+}
+
+body {
+  background:
+    radial-gradient(1100px 700px at 8% -10%, var(--grad-a), transparent 60%),
+    radial-gradient(900px 640px at 96% 0%, var(--grad-b), transparent 60%),
+    radial-gradient(900px 700px at 70% 55%, var(--grad-c), transparent 65%),
+    radial-gradient(800px 600px at 10% 95%, var(--grad-b), transparent 60%),
+    var(--bg);
+}
+
+/* Gradient text for the name and the big titles. */
+.brand,
+.hero h1,
+.gtext {
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Section rules fade out in the brand colours. */
+.section-label::after {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--g1) 55%, transparent), color-mix(in srgb, var(--g3) 25%, transparent) 60%, transparent);
+}
+
+/* Cards: a gradient edge that lights up on hover. */
+.game-card {
+  position: relative;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(var(--bg-elevated), var(--bg-elevated)) padding-box,
+    linear-gradient(115deg, var(--border), var(--border)) border-box;
+}
+.game-card:hover {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--bg-elevated), var(--bg-elevated)) padding-box,
+    var(--grad-brand) border-box;
+  box-shadow: 0 18px 40px -22px color-mix(in srgb, var(--g2) 55%, transparent);
+}
+
+/* ---------- Archiwar ---------- */
+.archiwar-page { max-width: 1040px; }
+.archiwar-page section > p,
+.archiwar-page .archiwar-lead { max-width: 68ch; }
+
+.aw-hero {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  margin: 0 0 22px;
+  box-shadow: 0 30px 70px -30px color-mix(in srgb, var(--g2) 60%, rgba(0, 0, 0, 0.6));
+  isolation: isolate;
+}
+.aw-hero video { display: block; width: 100%; height: auto; aspect-ratio: 1064 / 618; object-fit: cover; }
+.aw-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 38%, rgba(5, 8, 14, 0.82) 100%),
+    linear-gradient(115deg, color-mix(in srgb, var(--g1) 22%, transparent), transparent 45%, color-mix(in srgb, var(--g3) 22%, transparent));
+  pointer-events: none;
+}
+.aw-hero-copy {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  bottom: 26px;
+  z-index: 1;
+  color: #f4f6fb;
+}
+.aw-hero-copy h1 {
+  margin: 0 0 6px;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(115deg, #7ff5cf, #8fb8ff 50%, #d6b4ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.aw-hero-copy p { margin: 0; max-width: 46ch; font-size: 1.02rem; color: rgba(244, 246, 251, 0.86); }
+
+.aw-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 40px; }
+.aw-chips a {
+  font-size: 0.86rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-elevated), var(--bg-elevated)) padding-box,
+    var(--grad-brand) border-box;
+}
+.aw-chips a:hover { background: var(--grad-brand) border-box; color: #fff; }
+
+.archiwar-heading {
+  font-size: 1.6rem;
+  margin: 64px 0 14px;
+  scroll-margin-top: 90px;
+}
+
+/* Two pictures to a row on wide screens; one on a phone. */
+.aw-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 26px 0 30px;
+}
+.aw-grid .recipe-figure { margin: 0; }
+.aw-grid figcaption { font-size: 0.84rem; }
+
+.recipe-figure img,
+.recipe-figure video {
+  box-shadow: 0 22px 48px -28px color-mix(in srgb, var(--g2) 45%, rgba(0, 0, 0, 0.5));
+}
+
+/* A card per faction, each in its own colour. */
+.aw-factions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 26px 0 34px;
+}
+.aw-faction {
+  --f: var(--g1);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-elevated), var(--bg-elevated)) padding-box,
+    linear-gradient(135deg, var(--f), color-mix(in srgb, var(--f) 10%, transparent) 70%) border-box;
+}
+.aw-faction img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.aw-faction-body { padding: 16px 18px 18px; }
+.aw-faction h4 { margin: 0 0 6px; font-size: 1.08rem; color: var(--f); }
+.aw-faction p { margin: 0; font-size: 0.92rem; color: var(--text-muted); }
+.aw-faction.charter { --f: #3b82f6; }
+.aw-faction.kindled { --f: #f97316; }
+.aw-faction.drift { --f: #14b8a6; }
+.aw-faction.syndicate { --f: #22d3ee; }
+
+@media (max-width: 720px) {
+  .aw-grid, .aw-factions { grid-template-columns: 1fr; }
+  .aw-hero-copy { left: 16px; right: 16px; bottom: 14px; }
+  .aw-hero-copy p { font-size: 0.9rem; }
+  .archiwar-heading { margin-top: 48px; font-size: 1.35rem; }
+}
+.page-archiwar .site-header .wrap,
+.page-archiwar .site-footer .wrap { max-width: 1040px; }
+.aw-hero video { max-height: 70vh; }
+@media (max-width: 720px) {
+  .aw-hero { background: var(--bg-elevated); }
+  .aw-hero::after { display: none; }
+  .aw-hero-copy { position: static; padding: 16px 18px 18px; color: var(--text); }
+  .aw-hero-copy h1 { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; }
+  .aw-hero-copy p { color: var(--text-muted); }
+}
+.hero h1 { display: block; width: fit-content; }
+.hero-photo {
+  border: 3px solid transparent;
+  background: linear-gradient(var(--bg), var(--bg)) padding-box, var(--grad-brand) border-box;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--g2) 14%, transparent), var(--shadow);
+}
+html { background: var(--bg); }
+body { min-height: 100vh; }
