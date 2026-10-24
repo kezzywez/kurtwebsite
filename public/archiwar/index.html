@@ -70,7 +70,7 @@
   <main class="wrap archiwar-page">
     <section>
       <div class="aw-hero">
-        <video src="/assets/archiwar/v16-volcano.mp4" poster="/assets/archiwar/v16-volcano.jpg" autoplay muted loop playsinline preload="auto" aria-label="Two armies, Charter tanks and infantry against Kindled flame tanks and torchbearers, fighting at the foot of a volcano while lava runs down its slopes"></video>
+        <video src="/assets/archiwar/v19-hero.mp4" poster="/assets/archiwar/v19-hero.jpg" autoplay muted loop playsinline preload="auto" aria-label="Charter tanks and riflemen fighting Kindled flame trucks and fire troops at the foot of a volcano, lava running down the slope between them"></video>
         <div class="aw-hero-copy">
           <h1>Archiwar</h1>
           <p>A real-time strategy game I'm building in Godot for Steam. Four factions fight over the last islands of a drowning planet.</p>
@@ -78,309 +78,167 @@
       </div>
       <nav class="aw-chips" aria-label="On this page">
         <a href="#how-it-plays">How it plays</a>
-        <a href="#in-battle">In battle</a>
         <a href="#factions">Factions</a>
+        <a href="#water">Crossing the water</a>
         <a href="#islands">The islands</a>
         <a href="#campaign">The campaign</a>
       </nav>
       <p class="archiwar-lead">
-        It's set on Tidemark, a planet that's almost all ocean. The water keeps rising,
-        and the few islands left are what everyone is fighting over.
+        It's set on Tidemark, a world that's nearly all ocean. The sea keeps rising, and
+        the islands that are left are worth fighting for. It plays like the Command &amp;
+        Conquer games I grew up on, built around islands and the water between them.
       </p>
 
       <h3 class="archiwar-heading" id="how-it-plays">How it plays</h3>
       <p>
-        You win by wiping the other side off the map. Knock out their construction yard
-        and they can't build anything new, but their barracks and factories keep working
-        for as long as there is alloy to pay for it. Every building also claims the
-        ground around it, and in a skirmish, holding 45% of the dry land for two and a
-        half minutes wins it outright.
+        You build a base, dig ore, train an army and take the fight to the other side.
+        Ore pays for machines. Cash pays for soldiers, and it comes from the land you
+        hold, so every island you take pays you more.
       </p>
       <p>
-        There are two kinds of money. Alloy pays for machines and buildings. Harvesters
-        dig it out of the mines, and it only counts once they've hauled it back to your
-        base. Cash pays for people. It comes from the land you hold and arrives as a
-        payday every two minutes. Neutral villages sit on the islands in between, and if
-        you keep troops next to one long enough, it joins you and pays taxes too.
-      </p>
-      <p>
-        Buildings work the way they did in Command &amp; Conquer. You pay for one in the
-        sidebar, it gets built there, and when it's ready you place it on the map.
-        Infantry, vehicles, buildings and research each have their own queue, so nothing
-        holds up anything else.
-      </p>
-      <p>
-        Machines need someone inside to drive them. A tank comes out of the factory
-        empty and waits for a soldier to climb in. If its crew gets killed, it sits there
-        until somebody else does, and that can be the other side. Planes take off with
-        their pilot aboard, and if the pilot is killed, the plane falls out of the sky.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-empty.jpg" alt="Charter riflemen walking up to a damaged enemy tank in sand-coloured repaint with sandbags on its front, tagged EMPTY - TAKE IT, a harvester parked beside them" loading="lazy">
-          <figcaption>An enemy tank whose crew was killed. Whoever climbs in first gets it.</figcaption>
-        </figure>
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v8-village.jpg" alt="A small village of three blue-roofed huts on a sandy point, flying a blue flag, with Charter riflemen standing guard around it" loading="lazy">
-          <figcaption>A village that has come over to the Charter, with the men who won it.</figcaption>
-        </figure>
-      </div>
-      <p>
-        You can bridge a strait to walk your army across, but the bridge also blocks
-        your own ships from using that channel. Every boat comes off a naval yard, so
-        an island war needs a coast to build on.
-      </p>
-      <p>
-        Palm groves are where wood comes from, and wood builds bridges. Soldiers can cut
-        it, and timber rigs cut it faster. Groves also burn.
+        Machines need a crew. A tank leaves the factory empty and waits for a soldier to
+        climb in. Kill the crew of an enemy tank and it sits there, ready for whoever
+        reaches it first.
       </p>
       <figure class="recipe-figure">
-        <video src="/assets/archiwar/v7-sortie.mp4" poster="/assets/archiwar/v7-sortie.jpg" autoplay muted loop playsinline preload="none" aria-label="A firebomber taking off from an airfield, making three passes over a palm grove and dropping napalm on each, then flying home"></video>
-        <figcaption>A firebomber's sortie. Three passes over a grove, a drop on each, then home to rearm.</figcaption>
-      </figure>
-
-      <h3 class="archiwar-heading" id="in-battle">In battle</h3>
-      <p>
-        Fights happen at range, and every side fights its own way. The Syndicate's
-        machines carry shields and their drones burn targets from above. At sea, shells
-        that miss throw up water and a hit hull flashes white.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <video src="/assets/archiwar/v16-syndicate.mp4" poster="/assets/archiwar/v16-syndicate.jpg" autoplay muted loop playsinline preload="none" aria-label="White Syndicate tanks and soldiers fighting Charter armour, honeycomb shield domes flaring where shots hit, small drones circling over the Charter vehicles firing lasers"></video>
-          <figcaption>The Syndicate's shields and drones against Charter armour.</figcaption>
-        </figure>
-        <figure class="recipe-figure">
-          <video src="/assets/archiwar/v16-sea.mp4" poster="/assets/archiwar/v16-sea.jpg" autoplay muted loop playsinline preload="none" aria-label="Charter corvettes and monitors trading fire with Drift outrigger boats on open water, splashes around them and one hull exploding"></video>
-          <figcaption>Charter warships against the Drift's outriggers.</figcaption>
-        </figure>
-      </div>
-      <p>
-        Every pairing fights differently, and so does every place. On a volcano the
-        lava runs between the armies. In the dunes there is nowhere to hide.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <video src="/assets/archiwar/v18-ash-volcano.mp4" poster="/assets/archiwar/v18-ash-volcano.jpg" autoplay muted loop playsinline preload="none" aria-label="Kindled flame trucks and fire troops climbing the black ash slope of a volcano into white Syndicate machines, lava running down beside them, a shield dome flaring and lasers firing back"></video>
-          <figcaption>The Kindled against the Syndicate on a volcano's ash slope.</figcaption>
-        </figure>
-        <figure class="recipe-figure">
-          <video src="/assets/archiwar/v18-dunes.mp4" poster="/assets/archiwar/v18-dunes.jpg" autoplay muted loop playsinline preload="none" aria-label="Drift deckhands and walking hermit crab machines meeting a line of white Syndicate tanks and soldiers on sand beside a palm grove"></video>
-          <figcaption>The Drift against the Syndicate in the dunes.</figcaption>
-        </figure>
-      </div>
-      <figure class="recipe-figure">
-        <video src="/assets/archiwar/v18-circus.mp4" poster="/assets/archiwar/v18-circus.jpg" autoplay muted loop playsinline preload="none" aria-label="Kindled trucks firing fireworks and a striped circus cannon on open sand, trading fire with Charter tanks and riflemen"></video>
-        <figcaption>The Kindled against Charter armour on open sand.</figcaption>
-      </figure>
-      <p>
-        Damage shows. A building catches fire in more places as it gets weaker, and
-        rubble piles up around it. Hurt vehicles trail smoke, and a timber bridge
-        loses planks until you can see the water through it.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-damage.jpg" alt="Four gun emplacements in a row across a beach, from untouched to badly damaged, the weaker ones with fires burning on them and smoke rising, the worst surrounded by rubble" loading="lazy">
-          <figcaption>The same gun emplacement at full health and at three levels of damage.</figcaption>
-        </figure>
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-clash.jpg" alt="Charter tanks and riflemen trading fire with Kindled flame tanks and torchbearers, shells bursting and fires burning on the ground between them" loading="lazy">
-          <figcaption>Charter armour against Kindled flame tanks. Every Kindled shot leaves a small fire behind.</figcaption>
-        </figure>
-      </div>
-      <p>
-        Soldiers fall the way they were killed. A man who is shot buckles at the knees
-        and goes over away from the gun, a shell throws him off his feet, and fire turns
-        him round before he drops. The bodies stay a moment, then the ground takes them.
-      </p>
-      <figure class="recipe-figure">
-        <video src="/assets/archiwar/v14-deaths.mp4" poster="/assets/archiwar/v14-deaths.jpg" autoplay muted loop playsinline preload="none" aria-label="Soldiers from each of the four factions dying one after another, close up. One buckles and falls back when shot, one is thrown off his feet by a blast, and one staggers round and falls forward while burning"></video>
-        <figcaption>Shot, blown up and burnt, for a soldier from each faction.</figcaption>
+        <video src="/assets/archiwar/v19-empty.mp4" poster="/assets/archiwar/v19-empty.jpg" autoplay muted loop playsinline preload="none" aria-label="Charter riflemen walking up to a damaged Kindled tank whose crew has been killed"></video>
+        <figcaption>Charter riflemen going for a Kindled tank whose crew is dead.</figcaption>
       </figure>
 
       <h3 class="archiwar-heading" id="factions">Factions</h3>
       <p>
-        There are four factions, and each unlocks its stronger units its own way. The
-        Kindled build up fame, the Drift build up devotion through their priests, the
-        Syndicate count the land they have made, and the Charter's Assembly simply pays
-        for it.
+        Each faction plays differently, with its own units, buildings and way of
+        climbing to its strongest weapons.
       </p>
       <div class="aw-factions">
         <article class="aw-faction charter">
-          <img src="/assets/archiwar/v17-charter.jpg" alt="A Meridian Charter base: a glass-fronted assembly hall with a compass rose painted on its roof and a radar mast beside it, a vehicle shed with 07 painted on its roof, a gun emplacement, an AA site, and riflemen" loading="lazy">
+          <video src="/assets/archiwar/v19-charter.mp4" poster="/assets/archiwar/v19-charter.jpg" autoplay muted loop playsinline preload="none" aria-label="Charter tanks, mortar carriers and riflemen fighting Drift deckhands and walking Pilgrim machines on a rocky island"></video>
           <div class="aw-faction-body">
             <h4>The Meridian Charter</h4>
-            <p>The planet's own coalition, trying to unify the islands. It plays the most like a standard RTS side, and everything in its base is numbered and in order.</p>
+            <p>The islands' own union, trying to bring Tidemark under one charter. Tanks, rocket troops, gunboats and aircraft. The side you play in the campaign.</p>
           </div>
         </article>
         <article class="aw-faction kindled">
-          <img src="/assets/archiwar/v17-kindled.jpg" alt="A Kindled base: a burned-out Charter office with the compass rose on its roof crossed out in red, a bonfire and a striped stage in its yard, a forge hung with their flame banners, a launch strip lined with burning barrels, a bonfire tower, a flare stack and a war canoe" loading="lazy">
+          <video src="/assets/archiwar/v19-kindled.mp4" poster="/assets/archiwar/v19-kindled.jpg" autoplay muted loop playsinline preload="none" aria-label="Kindled flame trucks and fire troops charging white Syndicate tanks, whose shields light up where the shots land"></video>
           <div class="aw-faction-body">
             <h4>The Kindled</h4>
-            <p>Rebels who want to burn the old order down and have no idea what comes after. They fight with fire at close range, from a Charter office they took and burned out.</p>
+            <p>Rebels who want to burn the old order down. They fight up close with fire, and fire doesn't hurt them. Everything they kill feeds their fame.</p>
           </div>
         </article>
         <article class="aw-faction drift">
-          <img src="/assets/archiwar/v17-drift.jpg" alt="A Drift base: a ship hauled up onto the sand with a chapel on its deck, a crow's nest, a boatshed and a gun platform on stilts, each with whale-tail charms on poles, and Drift troops" loading="lazy">
+          <video src="/assets/archiwar/v19-drift-crossing.mp4" poster="/assets/archiwar/v19-drift-crossing.jpg" autoplay muted loop playsinline preload="none" aria-label="Drift Pilgrims, walking machines with boat hulls for bodies, wading across a channel with divers swimming beside them"></video>
           <div class="aw-faction-body">
             <h4>The Drift</h4>
-            <p>Religious fanatics who live on rafts and pray to the sea. Their anchorage is a ship hauled up the beach, waiting for the water to rise and float it off.</p>
+            <p>A sea-going faith that lives on rafts and prays to a whale. Their Pilgrims walk across the seabed and their divers swim, so water doesn't stop them.</p>
           </div>
         </article>
         <article class="aw-faction syndicate">
-          <img src="/assets/archiwar/v17-syndicate.jpg" alt="A Levee Syndicate base on raised white plazas: a tapering white tower banded in blue glass with a glowing crown ring and a landing pad, a long white fabricator hall, a laser emplacement, and cyan light lines along every edge" loading="lazy">
+          <video src="/assets/archiwar/v19-syndicate.mp4" poster="/assets/archiwar/v19-syndicate.jpg" autoplay muted loop playsinline preload="none" aria-label="White Syndicate tanks and soldiers fighting Charter armour beside a domed white building"></video>
           <div class="aw-faction-body">
             <h4>The Levee Syndicate</h4>
-            <p>A corporation back from Earth for the land and what is under it. They pump out the sea to make new ground, then build on it in white composite and Earth money.</p>
+            <p>A corporation back from Earth for the land. They pump out the sea to make new ground, and their machines carry shields.</p>
           </div>
         </article>
       </div>
+
+      <h3 class="archiwar-heading" id="water">Crossing the water</h3>
       <p>
-        The Drift can also build on the water. Their guns, lookouts and workshops can go
-        up on rafts, but only on water they already hold close to shore, and a raft
-        doesn't take as much punishment as solid ground.
+        Most of an army can't swim, so getting across is half the war. You can bridge a
+        strait with timber, though a bridge also blocks your own ships, or carry troops
+        over in boats. A few units cross on their own, and each faction does it its own way.
       </p>
       <div class="aw-grid">
         <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-rafts.jpg" alt="Drift buildings on log rafts in the sea just off a beach: a gun platform, a lookout tower, a workshop under a frame of whale ribs and a tall watch post" loading="lazy">
-          <figcaption>Drift guns and a workshop on rafts just off their coast.</figcaption>
+          <video src="/assets/archiwar/v19-beachhead.mp4" poster="/assets/archiwar/v19-beachhead.jpg" autoplay muted loop playsinline preload="none" aria-label="Four Charter hovercraft crossing a channel and running up onto a beach held by Kindled troops"></video>
+          <figcaption>Charter Beachheads, hovercraft that run over sea and sand alike.</figcaption>
         </figure>
         <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-yards.jpg" alt="Left, the Kindled headquarters up close: a Charter office with its windows burning and banners hung down the front, a toppled statue, a bonfire and a stage under a red and white striped awning. Right, the Drift ship up close on its rollers, propped up on both sides, a whale skull lashed to the bow" loading="lazy">
-          <figcaption>Two headquarters up close. The Kindled pulled the founder's statue down, and the Drift lashed a whale's skull to their bow.</figcaption>
-        </figure>
-      </div>
-      <p>
-        Soldiers are trained in a barracks, and each side builds its own kind.
-      </p>
-      <figure class="recipe-figure">
-        <img src="/assets/archiwar/v15-barracks.jpg" alt="Four barracks from above. A Charter militia camp of two numbered curved-roof huts either side of a parade square with a compass rose painted on it and a flag. A Kindled recruiting yard made of three painted shipping containers, a striped tarp and a soapbox with a megaphone. A Drift longhouse on stilts with a roof patched in coloured sailcloth and whale ribs over the door. A round white Syndicate pavilion under a glass dome on a lawn" loading="lazy">
-        <figcaption>Clockwise from top left, the Charter Barracks, the Kindled Muster Yard, the Syndicate Onboarding Centre and the Drift Crew Hall.</figcaption>
-      </figure>
-      <p>
-        The Syndicate's army is as expensive as their buildings. Contractors in white
-        plate carry rifles, Exosuits fire a laser lance from a powered frame, Compliance
-        Officers hold a riot shield made of light, and Service Drones fly in to repair
-        whatever is damaged. The Arbiter is a slow laser tank, the Mass Driver a railgun
-        that shells from range, and the Hover Lander puts eight troops on a beach. Their
-        strike comes from orbit. A pod lands on the target, and a squad walks out of it.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v14-syndicate-units.jpg" alt="Eight Syndicate units from above. Top, a rifleman in white plate over a dark suit with a glowing visor, an operator in a light exoskeleton with a laser lance along one arm, a four-rotor drone, and an officer behind a riot shield with a glowing frame. Bottom, a low white tank with a laser cannon, a tracked railgun with glowing coils, a hovercraft with two ducted fans, and a tracked launch deck with three drone pads" loading="lazy">
-          <figcaption>Contractor, Exosuit, Service Drone and Compliance Officer, then Arbiter, Mass Driver, Hover Lander and Drone Carrier.</figcaption>
+          <video src="/assets/archiwar/v19-kulik.mp4" poster="/assets/archiwar/v19-kulik.jpg" autoplay muted loop playsinline preload="none" aria-label="Small white Syndicate amphibious quads crossing a channel to a beach"></video>
+          <figcaption>Syndicate Kuliks, fast amphibious scouts.</figcaption>
         </figure>
         <figure class="recipe-figure">
-          <img src="/assets/archiwar/v14-syndicate-tech.jpg" alt="Left, white Syndicate tanks with rings of light rippling where Kindled shots hit their shields, and small four-rotor drones circling over the Kindled vehicles firing lasers down on them. Right, a beam of light coming down from the sky onto a Charter outpost, explosions all around it and Syndicate troops stepping out of the blast" loading="lazy">
-          <figcaption>Shields and drones over the Kindled, and an orbital drop on a Charter outpost.</figcaption>
-        </figure>
-      </div>
-      <p>
-        Every faction also fields two machines of its own, each based on a real
-        vehicle. The Charter have the Beachhead, a hovercraft gunboat that runs over
-        sea and sand alike, and the Long Arm, a mortar on a hydraulic boom. The
-        Kindled have the Drumroll, an armoured dozer that rolls a burning drum into
-        buildings, and the Trapdoor, a tunnelling machine you cannot see until it
-        comes up to fight. The Drift have the Pilgrim, a walking excavator in a
-        salvaged hull that wades out of the surf, and the Undertow, a submarine. The
-        Syndicate have the Gangway, which lays a bridge across a channel, and the
-        Kulik, a fast amphibious scout.
-      </p>
-      <figure class="recipe-figure">
-        <img src="/assets/archiwar/v10-creatures-units.jpg" alt="Eight vehicles in two rows. Top, a hovercraft gunboat on a black skirt with two fans, an eight-wheeled mortar carrier with a folded boom, a tracked dozer pushing a burning drum, and a tunnelling machine with a cone of cutting teeth. Bottom, a walking excavator on four wheeled legs with a boat hull for a body and a harpoon on its arm, a submarine, a tracked bridgelayer carrying its span, and a small amphibious quad" loading="lazy">
-        <figcaption>Top row, Beachhead, Long Arm, Drumroll and Trapdoor. Bottom row, Pilgrim, Undertow, Gangway and Kulik.</figcaption>
-      </figure>
-      <p>
-        A lot of the machinery moves. Guns turn to follow their targets, fires burn,
-        and rotors and fans spin.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <video src="/assets/archiwar/v13-parts.mp4" poster="/assets/archiwar/v13-parts.jpg" autoplay muted loop playsinline preload="none" aria-label="Four short loops. A Kindled bonfire tower burning, a Syndicate service drone with its four rotors spinning, a Drift trawler with gulls circling, and a Syndicate hovercraft with its two fans turning"></video>
-          <figcaption>A bonfire tower, a Service Drone, a Drift trawler and a Hover Lander.</figcaption>
+          <video src="/assets/archiwar/v19-stilts.mp4" poster="/assets/archiwar/v19-stilts.jpg" autoplay muted loop playsinline preload="none" aria-label="Kindled stilt walkers wading a narrow shallow channel between two islands toward Syndicate soldiers"></video>
+          <figcaption>Kindled stilt walkers can wade the shallows, but not the open sea.</figcaption>
         </figure>
         <figure class="recipe-figure">
-          <img src="/assets/archiwar/v8-skirmish.jpg" alt="The skirmish screen: a row of four faction cards to play as, the Meridian Charter, the Kindled, the Drift and the Levee Syndicate, and a second row to play against, with Random" loading="lazy">
-          <figcaption>Skirmish. Pick a side for each player, or a random one to play against.</figcaption>
+          <video src="/assets/archiwar/v19-sea.mp4" poster="/assets/archiwar/v19-sea.jpg" autoplay muted loop playsinline preload="none" aria-label="Charter gunboats and monitors fighting Drift boats and a submarine on open water"></video>
+          <figcaption>Out at sea, Charter warships against the Drift's boats.</figcaption>
         </figure>
       </div>
 
       <h3 class="archiwar-heading" id="islands">The islands</h3>
       <p>
-        Some maps have a volcano on one of the middle islands. Lava runs down its slopes
-        in channels that shift every couple of minutes. Anything standing in it burns,
-        palms next to it catch fire, and nothing can be built on the cone.
+        Every region has its own kind of map. The Charter's home waters are a chain of
+        islands. The Drift live among open sea and scattered islets. The Kindled hold the
+        Ashline, one great volcano between the two sides. The Syndicate's Polders are long
+        low strips of land with channels to bridge, and High Holding is big, rocky ground.
       </p>
-      <figure class="recipe-figure">
-        <img src="/assets/archiwar/v9-volcano.jpg" alt="A volcano seen from above, lava running in glowing rivers down its ash slopes from a lit crater, palms burning at its foot and steam drifting off" loading="lazy">
-        <figcaption>A volcano. The lava follows the gullies down from the crater.</figcaption>
-      </figure>
-      <p>
-        The larger islands rise to cliffs along parts of the coast, and a few have a
-        river that starts at a spring, runs across the high ground and drops into the sea.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v8-fall.jpg" alt="A river running across a sandy headland and falling into the sea in a burst of white water" loading="lazy">
-          <figcaption>A river dropping off the edge of an island.</figcaption>
+      <div class="aw-maps">
+        <figure>
+          <img src="/assets/archiwar/v19-map-home.jpg" alt="A map from above: two round home islands in opposite corners and a string of islands between them" loading="lazy">
+          <figcaption><strong>Home waters</strong>The Charter</figcaption>
         </figure>
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-ground.jpg" alt="Left, a mine head with a red steel winding tower and a shed, three stone outcrops beside it with crystals of ore growing out of the rock, a harvester parked nearby. Right, a river rising at the foot of a cluster of boulders and running off toward the coast" loading="lazy">
-          <figcaption>A mine and its ore, and the spring where a river starts.</figcaption>
+        <figure>
+          <img src="/assets/archiwar/v19-map-atoll.jpg" alt="A map from above: small home islands and dozens of little islets scattered across open sea" loading="lazy">
+          <figcaption><strong>The atolls</strong>The Drift</figcaption>
+        </figure>
+        <figure>
+          <img src="/assets/archiwar/v19-map-ashline.jpg" alt="A map from above: one big island in the middle with a volcano at its heart, between two home islands" loading="lazy">
+          <figcaption><strong>The Ashline</strong>The Kindled</figcaption>
+        </figure>
+        <figure>
+          <img src="/assets/archiwar/v19-map-polders.jpg" alt="A map from above: long thin strips of land lying across the sea between two home islands" loading="lazy">
+          <figcaption><strong>The Polders</strong>The Syndicate</figcaption>
+        </figure>
+        <figure>
+          <img src="/assets/archiwar/v19-map-highland.jpg" alt="A map from above: a few big rocky islands between two home islands" loading="lazy">
+          <figcaption><strong>High Holding</strong>The finale</figcaption>
         </figure>
       </div>
       <p>
-        There are things in the water too. A sea serpent lives in open water and bites
-        any ship that sits still near it for too long. The Drift can call up a giant
-        whale that throws itself onto a stretch of coast and flattens whatever is there.
-        Some maps also have ruins from an older world standing in the shallows. Keep
-        troops at one with nobody from the other side around and you take it, along
-        with a bonus for your whole army.
+        Lava runs down a volcano in channels that shift every few minutes, and anything
+        standing in it burns. Palm groves give the timber for bridges, and they burn too.
+        There's a sea serpent in open water that goes for ships, and the Drift can call
+        up a whale that throws itself onto a beach.
       </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-creatures.jpg" alt="Left, a green sea serpent with red spines rising out of the water to bite across the deck of a gunboat moored at a jetty, its body trailing back out to sea. Right, a blue-grey whale arching up out of the sea beside two enemy gunboats just off a beach, with Drift troops watching from the sand" loading="lazy">
-          <figcaption>The sea serpent going for a gunboat, and the whale the Drift call up.</figcaption>
-        </figure>
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v10-shrines.jpg" alt="Two small sandy islands, each with a mossy stone ruin in the middle and riflemen standing guard around it. One is a tall carved stone figure on a platform, the other a stepped stone tower with pillars leaning against it" loading="lazy">
-          <figcaption>Troops holding two of the old ruins.</figcaption>
-        </figure>
-      </div>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-coast.jpg" alt="A Charter gunboat nosing in to a sandy beach where riflemen and a tank have come ashore beside a mine head, with teal shallows fading to deep blue water" loading="lazy">
-          <figcaption>A gunboat bringing troops in. Ships slow down near land.</figcaption>
-        </figure>
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v9-sea.jpg" alt="Charter gunboats and monitors trading fire with red Kindled boats on open water, shell splashes around them and one hull flashing white as it is hit" loading="lazy">
-          <figcaption>A fight at sea off the Kindled coast.</figcaption>
-        </figure>
-      </div>
 
       <h3 class="archiwar-heading" id="campaign">The campaign</h3>
       <p>
-        The campaign is played as the Meridian Charter, the islands' own coalition,
-        trying to bring all of Tidemark under one charter. Corporal Marsh talks you
-        through it, and he turns out to know more about the one surveyor who never
-        signed than he first lets on. Later chapters bring in the other three factions,
-        and beating the campaign unlocks them for skirmish.
+        You're the new commander of the Meridian Charter, a union of islands that's only
+        a few days old. Each chapter moves to a new region and a new enemy, and starts
+        small. By the end of a chapter the battles are much bigger than at its start.
       </p>
-      <p>
-        The first mission is training. Each step lights up what it wants you to click,
-        and it ends with your first real fight. A new campaign asks how hard you want
-        the other side to play.
-      </p>
-      <div class="aw-grid">
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v8-training.jpg" alt="The first mission: a construction yard on a beach, the objective and a training step at the top of the screen, and gold rings with arrows marking the two harvesters the step wants selected" loading="lazy">
-          <figcaption>Training. The gold rings mark what the current step wants you to click.</figcaption>
-        </figure>
-        <figure class="recipe-figure">
-          <img src="/assets/archiwar/v8-reveal.jpg" alt="A story scene in a mission: a dialogue card at the bottom of the screen with a portrait of Ilse Vantor, who says Hello, Danny. You always did carry it upside down." loading="lazy">
-          <figcaption>The story happens in the missions, between the people in them.</figcaption>
-        </figure>
+      <div class="aw-cast">
+        <div class="aw-person">
+          <img src="/assets/archiwar/v19-marsh.jpg" alt="Portrait of Captain Marsh, a commando in a blue beret with a headset and face paint" loading="lazy">
+          <div>
+            <h4>Captain Marsh</h4>
+            <p>Your second in command. He grew up on an island the sea took.</p>
+          </div>
+        </div>
+        <div class="aw-person">
+          <img src="/assets/archiwar/v19-marrow.jpg" alt="Portrait of Chancellor Marrow, a grey-haired woman in a navy pilot's coat" loading="lazy">
+          <div>
+            <h4>Chancellor Marrow</h4>
+            <p>She talked three islands into one union, and she likes the credit for it.</p>
+          </div>
+        </div>
+        <div class="aw-person">
+          <img src="/assets/archiwar/v19-rook.jpg" alt="Portrait of Abe Rook, a grinning bearded man in a bush hat and a red scarf" loading="lazy">
+          <div>
+            <h4>Abe Rook</h4>
+            <p>He runs the Free Captains. He used to work with Marrow, and he calls her a liar.</p>
+          </div>
+        </div>
       </div>
+      <p>
+        The story happens during the missions. The speaker's face comes up in a box at
+        the bottom of the screen and they talk while the battle waits.
+      </p>
+      <figure class="recipe-figure">
+        <video src="/assets/archiwar/v19-talking.mp4" poster="/assets/archiwar/v19-talking.jpg" autoplay muted loop playsinline preload="none" aria-label="A dialogue box at the bottom of the screen, with Captain Marsh's portrait talking and his line typing out beside it"></video>
+        <figcaption>Captain Marsh and Chancellor Marrow, early in the second mission.</figcaption>
+      </figure>
     </section>
   </main>
 
