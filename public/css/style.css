@@ -668,6 +668,10 @@ footer.site-footer .footer-social svg { width: 17px; height: 17px; }
 
   .hero-photo { justify-self: center; width: 128px; height: 128px; }
 
+  /* The name is only as wide as its text (for the gradient), so centring
+     the text alone left it sitting at the left edge. */
+  .hero h1 { margin-left: auto; margin-right: auto; }
+
   .hero .location { justify-content: center; }
 
   .social-links { justify-content: center; }
